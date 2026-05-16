@@ -38,7 +38,11 @@ TRAIT_NAMES = {
 }
 
 # --- Modeling -----------------------------------------------------------------
-CLASSIFIER_MODEL = "microsoft/deberta-v3-base"
+# RoBERTa-base instead of DeBERTa-v3-base: transformers v5 has a regression in
+# DeBERTa's LayerNorm beta/gamma -> weight/bias rename that causes NaN gradients
+# within ~50 fine-tuning steps. RoBERTa is well-behaved, slightly smaller (~125M
+# vs 184M params), and is the standard encoder baseline in this literature.
+CLASSIFIER_MODEL = "roberta-base"
 MAX_SEQ_LEN = 512
 SEED = 42
 

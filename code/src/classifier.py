@@ -156,7 +156,8 @@ def fit_one_seed(
         problem_type="multi_label_classification",
     )
 
-    out_dir = config.CHECKPOINTS_DIR / f"deberta-v3-base_seed{seed}"
+    model_slug = config.CLASSIFIER_MODEL.split("/")[-1]
+    out_dir = config.CHECKPOINTS_DIR / f"{model_slug}_seed{seed}"
 
     args = TrainingArguments(
         output_dir=str(out_dir),
@@ -262,7 +263,6 @@ def main() -> None:
         args.epochs = 1
 
     seeds = [int(s.strip()) for s in args.seeds.split(",") if s.strip()]
-    name = "deberta-v3-base"
     config.ensure_dirs()
 
     print(f"device : {get_device()}")
@@ -286,6 +286,7 @@ def main() -> None:
     test_y = splits["test"][config.TRAIT_COLS].to_numpy()
     test_ids = splits["test"]["AUTHID"].tolist()
 
+    name = config.CLASSIFIER_MODEL.split("/")[-1]
     all_probs: list[np.ndarray] = []
     all_thresholds: list[np.ndarray] = []
     for seed in seeds:
