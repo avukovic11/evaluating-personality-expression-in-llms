@@ -1,0 +1,26 @@
+# Normalize line endings to LF in the repo (works fine for Python on Windows too).
+# Prevents CRLF / LF drift across Windows / macOS / Linux contributors.
+* text=auto eol=lf
+
+# Source files
+*.py    text eol=lf
+*.md    text eol=lf
+*.txt   text eol=lf
+*.toml  text eol=lf
+*.yaml  text eol=lf
+*.yml   text eol=lf
+*.json  text eol=lf
+*.jsonl text eol=lf
+*.csv   text eol=lf
+*.tex   text eol=lf
+*.bib   text eol=lf
+
+# Notebooks: track as text but they have their own newline convention.
+*.ipynb text eol=lf
+
+# Binary assets
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.pdf  binary
+*.pkl  binary
