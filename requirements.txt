@@ -11,6 +11,7 @@ tokenizers>=0.19
 accelerate>=0.30
 datasets>=2.18
 sentencepiece>=0.2.0          # required by DeBERTa-v3 tokenizer
+protobuf>=4.0                 # required by tokenizers v5 to parse SentencePiece .model files
 
 # --- Classical ML / stats ---
 scikit-learn>=1.3
