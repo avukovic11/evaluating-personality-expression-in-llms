@@ -143,7 +143,12 @@ def fit_one_seed(
     """Train one model, return (test_probs, thresholds)."""
     set_seed(seed)
     device = get_device()
-    fp16 = device == "cuda"
+    # Mixed precision: bf16 on Ampere+ (A100, RTX 30xx, ...); fp32 on Turing (T4)
+    # and below. fp16 is intentionally disabled: transformers v5 + accelerate
+    # currently hits "Attempting to unscale FP16 gradients" in clip_grad_norm_.
+    use_bf16 = (
+        device == "cuda" and torch.cuda.get_device_capability()[0] >= 8
+    )
 
     model = AutoModelForSequenceClassification.from_pretrained(
         config.CLASSIFIER_MODEL,
@@ -169,7 +174,7 @@ def fit_one_seed(
         save_total_limit=1,
         logging_steps=50,
         seed=seed,
-        fp16=fp16,
+        bf16=use_bf16,
         report_to=[],
         dataloader_num_workers=0,        # safer on Windows; Colab Linux is unaffected
     )
