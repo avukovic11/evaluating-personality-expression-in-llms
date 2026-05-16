@@ -15,7 +15,7 @@ sentencepiece>=0.2.0          # required by DeBERTa-v3 tokenizer
 # --- Classical ML / stats ---
 scikit-learn>=1.3
 iterative-stratification>=0.1.7
-numpy>=1.24,<2.0              # shap / nltk compat
+numpy>=1.24
 pandas>=2.0
 scipy>=1.10
 
