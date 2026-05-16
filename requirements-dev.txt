@@ -1,0 +1,9 @@
+# Optional dev dependencies for running the notebooks locally.
+# NOT needed on Google Colab (Colab provides the Jupyter stack and our
+# versions conflict with Colab's preinstalled kernel-gateway).
+#
+# Install with:
+#     pip install -r requirements-dev.txt
+
+jupyter>=1.0
+ipykernel>=6.25

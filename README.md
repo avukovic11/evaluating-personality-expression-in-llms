@@ -58,6 +58,7 @@ python -m venv .venv
 ```bash
 python -m pip install --upgrade pip
 pip install -r requirements.txt
+pip install -r requirements-dev.txt    # optional, only needed for the local notebooks
 ```
 
 For NVIDIA GPU on Linux / Windows, install the matching CUDA wheel of PyTorch **before** the line above, e.g.:
@@ -65,6 +66,8 @@ For NVIDIA GPU on Linux / Windows, install the matching CUDA wheel of PyTorch **
 pip install torch --index-url https://download.pytorch.org/whl/cu121
 ```
 On Apple Silicon, the default wheel uses MPS automatically.
+
+**On Google Colab**, install **only** `requirements.txt` — Colab provides its own Jupyter stack and the dev requirements conflict with Colab's pinned `kernel-gateway`.
 
 ### 4. Configure the OpenAI key
 

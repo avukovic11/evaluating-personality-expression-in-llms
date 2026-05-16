@@ -30,11 +30,12 @@ python-dotenv>=1.0
 nltk>=3.8
 nrclex>=4.0
 
-# --- Plotting / notebooks ---
+# --- Plotting ---
 matplotlib>=3.7
 seaborn>=0.13
-jupyter>=1.0
-ipykernel>=6.25
 
 # --- Utilities ---
 tqdm>=4.66
+
+# Jupyter / notebook deps live in requirements-dev.txt — install separately if you
+# want to run the notebooks locally. On Colab the Jupyter stack is preinstalled.
