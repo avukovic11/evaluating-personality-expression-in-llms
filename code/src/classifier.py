@@ -95,7 +95,7 @@ def _sigmoid(x: np.ndarray) -> np.ndarray:
 
 
 def hf_compute_metrics(eval_pred) -> dict[str, float]:
-    """Macro-F1 at 0.5 threshold — used to select the best checkpoint."""
+    """Macro-accuracy and macro-F1 at 0.5 threshold; accuracy drives early stopping."""
     logits, labels = eval_pred
     preds = (_sigmoid(logits) > 0.5).astype(np.int8)
     labels = np.asarray(labels, dtype=np.int8)
@@ -103,7 +103,14 @@ def hf_compute_metrics(eval_pred) -> dict[str, float]:
         f1_score(labels[:, i], preds[:, i], zero_division=0)
         for i in range(labels.shape[1])
     ]
-    return {"macro_f1": float(np.mean(f1s))}
+    accs = [
+        float((labels[:, i] == preds[:, i]).mean())
+        for i in range(labels.shape[1])
+    ]
+    return {
+        "macro_accuracy": float(np.mean(accs)),
+        "macro_f1": float(np.mean(f1s)),
+    }
 
 
 # -----------------------------------------------------------------------------
@@ -111,16 +118,22 @@ def hf_compute_metrics(eval_pred) -> dict[str, float]:
 # -----------------------------------------------------------------------------
 
 def tune_thresholds(probs: np.ndarray, y: np.ndarray) -> np.ndarray:
-    """Per-trait threshold ∈ [0.2, 0.8] maximizing F1 on `y`."""
-    candidates = np.linspace(0.2, 0.8, 31)
+    """Per-trait threshold ∈ [0.3, 0.7] maximizing accuracy on `y`.
+
+    Labels are roughly balanced (~50% positive per trait), so accuracy is the
+    cleanest tuning objective. F1 systematically prefers low thresholds and
+    over-predicts the positive class, which costs us ~5 pp macro accuracy.
+    Narrow range + coarser grid reduces overfit on the small (~246) val set.
+    """
+    candidates = np.linspace(0.3, 0.7, 17)
     thresholds = np.full(y.shape[1], 0.5)
     for i in range(y.shape[1]):
-        best_f1, best_t = -1.0, 0.5
+        best_acc, best_t = -1.0, 0.5
         for t in candidates:
             preds = (probs[:, i] >= t).astype(np.int8)
-            f1 = f1_score(y[:, i], preds, zero_division=0)
-            if f1 > best_f1:
-                best_f1, best_t = f1, float(t)
+            acc = float((y[:, i] == preds).mean())
+            if acc > best_acc:
+                best_acc, best_t = acc, float(t)
         thresholds[i] = best_t
     return thresholds
 
@@ -170,7 +183,7 @@ def fit_one_seed(
         eval_strategy="epoch",
         save_strategy="epoch",
         load_best_model_at_end=True,
-        metric_for_best_model="macro_f1",
+        metric_for_best_model="macro_accuracy",
         greater_is_better=True,
         save_total_limit=1,
         logging_steps=50,
