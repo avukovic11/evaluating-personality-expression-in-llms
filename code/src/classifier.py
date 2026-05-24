@@ -19,10 +19,11 @@ Outputs:
                                                              # ensemble (or single-seed)
 
 Run from `code/`:
-    python -m src.classifier --train
+    python -m src.classifier --train                                          # default: config.CLASSIFIER_MODEL (roberta-base)
+    python -m src.classifier --train --model answerdotai/ModernBERT-base      # override encoder
     python -m src.classifier --train --seeds 42,43,44
-    python -m src.classifier --train --smoke              # 1 epoch on 64 examples
-    python -m src.classifier --predict-file essay.txt     # score a saved essay
+    python -m src.classifier --train --smoke                                  # 1 epoch on 64 examples
+    python -m src.classifier --predict-file essay.txt                         # score a saved essay
     cat essay.txt | python -m src.classifier --predict-stdin
 """
 
@@ -154,6 +155,7 @@ def fit_one_seed(
     epochs: int,
     batch_size: int,
     lr: float,
+    model_name: str,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Train one model, return (test_probs, thresholds)."""
     set_seed(seed)
@@ -166,12 +168,12 @@ def fit_one_seed(
     )
 
     model = AutoModelForSequenceClassification.from_pretrained(
-        config.CLASSIFIER_MODEL,
+        model_name,
         num_labels=len(config.TRAIT_COLS),
         problem_type="multi_label_classification",
     )
 
-    model_slug = config.CLASSIFIER_MODEL.split("/")[-1]
+    model_slug = model_name.split("/")[-1]
     out_dir = config.CHECKPOINTS_DIR / f"{model_slug}_seed{seed}"
 
     args = TrainingArguments(
@@ -307,6 +309,10 @@ def main() -> None:
         "--checkpoint-dir", type=str, default=None, metavar="PATH",
         help="Checkpoint dir for --predict-*; defaults to <CHECKPOINTS_DIR>/<model>_seed42.",
     )
+    parser.add_argument(
+        "--model", type=str, default=config.CLASSIFIER_MODEL, metavar="HF_ID",
+        help=f"HuggingFace model id; defaults to config.CLASSIFIER_MODEL ({config.CLASSIFIER_MODEL}).",
+    )
     args = parser.parse_args()
 
     if args.predict_file or args.predict_stdin:
@@ -318,7 +324,7 @@ def main() -> None:
         if not text.strip():
             raise SystemExit("Empty input.")
 
-        model_slug = config.CLASSIFIER_MODEL.split("/")[-1]
+        model_slug = args.model.split("/")[-1]
         ckpt = (
             Path(args.checkpoint_dir) if args.checkpoint_dir
             else config.CHECKPOINTS_DIR / f"{model_slug}_seed42"
@@ -347,7 +353,7 @@ def main() -> None:
     config.ensure_dirs()
 
     print(f"device : {get_device()}")
-    print(f"model  : {config.CLASSIFIER_MODEL}")
+    print(f"model  : {args.model}")
     print(f"seeds  : {seeds}")
     print(f"epochs : {args.epochs}  batch={args.batch_size}  lr={args.lr}")
     if args.max_train_samples:
@@ -358,7 +364,7 @@ def main() -> None:
     if args.max_train_samples is not None:
         splits["train"] = splits["train"].head(args.max_train_samples)
 
-    tokenizer = AutoTokenizer.from_pretrained(config.CLASSIFIER_MODEL)
+    tokenizer = AutoTokenizer.from_pretrained(args.model)
     train_ds = make_dataset(splits["train"], tokenizer)
     val_ds = make_dataset(splits["val"], tokenizer)
     test_ds = make_dataset(splits["test"], tokenizer)
@@ -367,7 +373,7 @@ def main() -> None:
     test_y = splits["test"][config.TRAIT_COLS].to_numpy()
     test_ids = splits["test"]["AUTHID"].tolist()
 
-    name = config.CLASSIFIER_MODEL.split("/")[-1]
+    name = args.model.split("/")[-1]
     all_probs: list[np.ndarray] = []
     all_thresholds: list[np.ndarray] = []
     for seed in seeds:
@@ -375,6 +381,7 @@ def main() -> None:
         probs, thresholds = fit_one_seed(
             seed, train_ds, val_ds, test_ds, val_y, tokenizer,
             epochs=args.epochs, batch_size=args.batch_size, lr=args.lr,
+            model_name=args.model,
         )
         pred = (probs >= thresholds[None, :]).astype(np.int8)
         m = metrics_per_trait(test_y, pred, probs)
