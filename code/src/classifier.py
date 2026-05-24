@@ -21,7 +21,9 @@ Outputs:
 Run from `code/`:
     python -m src.classifier --train
     python -m src.classifier --train --seeds 42,43,44
-    python -m src.classifier --train --smoke         # 1 epoch on 64 examples (CPU-safe)
+    python -m src.classifier --train --smoke              # 1 epoch on 64 examples
+    python -m src.classifier --predict-file essay.txt     # score a saved essay
+    cat essay.txt | python -m src.classifier --predict-stdin
 """
 
 from __future__ import annotations
@@ -215,6 +217,33 @@ def fit_one_seed(
 
 
 # -----------------------------------------------------------------------------
+# Inference on a single text
+# -----------------------------------------------------------------------------
+
+def predict_text(text: str, checkpoint_dir: Path) -> dict:
+    """Load a saved checkpoint and return per-trait sigmoid probabilities."""
+    if not checkpoint_dir.exists():
+        raise FileNotFoundError(
+            f"Checkpoint not found at {checkpoint_dir}. Train first with --train."
+        )
+    tokenizer = AutoTokenizer.from_pretrained(str(checkpoint_dir))
+    model = AutoModelForSequenceClassification.from_pretrained(str(checkpoint_dir))
+    device = get_device()
+    model.to(device).eval()
+
+    inputs = tokenizer(
+        text,
+        return_tensors="pt",
+        truncation=True,
+        max_length=config.MAX_SEQ_LEN,
+    ).to(device)
+    with torch.no_grad():
+        logits = model(**inputs).logits[0].cpu().numpy()
+    probs = _sigmoid(logits)
+    return {t: float(probs[i]) for i, t in enumerate(config.TRAIT_COLS)}
+
+
+# -----------------------------------------------------------------------------
 # Entry point
 # -----------------------------------------------------------------------------
 
@@ -266,10 +295,49 @@ def main() -> None:
         "--max-train-samples", type=int, default=None,
         help="Subsample train to N rows for quick iteration. Implies --epochs 1 unless set.",
     )
+    parser.add_argument(
+        "--predict-file", type=str, default=None, metavar="PATH",
+        help="Skip training; predict Big Five probabilities for the essay in PATH.",
+    )
+    parser.add_argument(
+        "--predict-stdin", action="store_true",
+        help="Skip training; read essay text from stdin and predict.",
+    )
+    parser.add_argument(
+        "--checkpoint-dir", type=str, default=None, metavar="PATH",
+        help="Checkpoint dir for --predict-*; defaults to <CHECKPOINTS_DIR>/<model>_seed42.",
+    )
     args = parser.parse_args()
 
+    if args.predict_file or args.predict_stdin:
+        if args.predict_file:
+            text = Path(args.predict_file).read_text(encoding="utf-8")
+        else:
+            import sys
+            text = sys.stdin.read()
+        if not text.strip():
+            raise SystemExit("Empty input.")
+
+        model_slug = config.CLASSIFIER_MODEL.split("/")[-1]
+        ckpt = (
+            Path(args.checkpoint_dir) if args.checkpoint_dir
+            else config.CHECKPOINTS_DIR / f"{model_slug}_seed42"
+        )
+        probs = predict_text(text, ckpt)
+
+        n_words = len(text.split())
+        preview = text.strip().replace("\n", " ")[:100]
+        print(f"Text ({n_words} words):")
+        print(f"  {preview}{'...' if len(text) > 100 else ''}")
+        print()
+        print(f"  {'trait':<6}  {'name':<18}  {'prob':>5}  {'pred@0.5':>8}")
+        for t, p in probs.items():
+            pred = "y" if p >= 0.5 else "n"
+            print(f"  {t:<6}  {config.TRAIT_NAMES[t]:<18}  {p:>5.3f}  {pred:>8}")
+        return
+
     if not args.train:
-        parser.error("Pass --train to fine-tune the classifier.")
+        parser.error("Pass --train to fine-tune, or --predict-file / --predict-stdin to score text.")
 
     if args.smoke:
         args.max_train_samples = args.max_train_samples or 64
