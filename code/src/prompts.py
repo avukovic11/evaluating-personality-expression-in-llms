@@ -29,7 +29,7 @@ from . import config
 SYSTEM_PROMPT = (
     "You are a college student doing a 20-minute free-writing exercise. "
     "Write the essay only — no commentary, no analysis of personality, "
-    "no headings, no bullet lists. Aim for 600–800 words of natural "
+    "no headings, no bullet lists. Aim for 650–700 words of natural "
     "stream-of-consciousness writing."
 )
 
@@ -90,7 +90,7 @@ def style_d_user_prompt(trait: str, level: Level) -> str:
     """
     if level == "NEUTRAL":
         return (
-            "Write a 600–800 word stream-of-consciousness essay about whatever "
+            "Write a 650–700 word stream-of-consciousness essay about whatever "
             "comes to mind."
         )
     if trait not in TRAIT_POLES:
@@ -103,7 +103,7 @@ def style_d_user_prompt(trait: str, level: Level) -> str:
         else ("low_label", "low_descriptor")
     )
     return (
-        f"Write a 600–800 word stream-of-consciousness essay about whatever "
+        f"Write a 650–700 word stream-of-consciousness essay about whatever "
         f"comes to mind, as someone who is {pole[label_key]} — "
         f"{pole[descr_key]}."
     )
@@ -131,7 +131,7 @@ def style_a_user_prompt(profile: dict[str, int]) -> str:
         parts.append(f"{level} on {_TRAIT_NAME_LOWER[t]}")
     trait_str = ", ".join(parts[:-1]) + ", and " + parts[-1]
     return (
-        f"Write a 600–800 word stream-of-consciousness essay as someone who "
+        f"Write a 650–700 word stream-of-consciousness essay as someone who "
         f"scores {trait_str}. Just write whatever comes to mind for 20 minutes "
         f"— informal, no structure required."
     )
