@@ -141,7 +141,12 @@ async def call_with_retry(
     client, messages: list[dict[str, str]], model: str,
     temperature: float, max_tokens: int, max_retries: int = 5,
 ):
-    """Chat-completion call with exponential backoff on transient errors."""
+    """Chat-completion call with exponential backoff on transient errors.
+
+    `insufficient_quota` is not retryable (project has no credits); we
+    let it bubble immediately so the run aborts fast instead of waiting
+    through 5 attempts × 15 essays before noticing.
+    """
     from openai import APIConnectionError, APITimeoutError, RateLimitError
 
     last_err: Exception | None = None
@@ -154,6 +159,10 @@ async def call_with_retry(
                 max_tokens=max_tokens,
             )
         except (RateLimitError, APITimeoutError, APIConnectionError) as e:
+            if isinstance(e, RateLimitError):
+                body = getattr(e, "body", None) or {}
+                if isinstance(body, dict) and body.get("code") == "insufficient_quota":
+                    raise  # account/project has no credits — no point retrying
             last_err = e
             if attempt == max_retries - 1:
                 break
