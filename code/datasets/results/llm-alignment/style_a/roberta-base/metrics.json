@@ -1,0 +1,46 @@
+{
+  "per_trait": {
+    "cEXT": {
+      "accuracy": 0.8,
+      "auc": 1.0,
+      "mae": 0.39794381856918337,
+      "n_intended_high": 4,
+      "n_intended_low": 1
+    },
+    "cNEU": {
+      "accuracy": 0.4,
+      "auc": 1.0,
+      "mae": 0.4746134698390961,
+      "n_intended_high": 4,
+      "n_intended_low": 1
+    },
+    "cAGR": {
+      "accuracy": 0.4,
+      "auc": 1.0,
+      "mae": 0.4516950249671936,
+      "n_intended_high": 2,
+      "n_intended_low": 3
+    },
+    "cCON": {
+      "accuracy": 0.6,
+      "auc": 0.5,
+      "mae": 0.4659865856170654,
+      "n_intended_high": 3,
+      "n_intended_low": 2
+    },
+    "cOPN": {
+      "accuracy": 0.8,
+      "auc": 0.5,
+      "mae": 0.3257795453071594,
+      "n_intended_high": 4,
+      "n_intended_low": 1
+    }
+  },
+  "macro": {
+    "accuracy": 0.6,
+    "auc": 0.8,
+    "mae": 0.4232036888599396
+  },
+  "n": 5,
+  "profile_exact_match": 0.2
+}
