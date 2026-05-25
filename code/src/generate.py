@@ -240,6 +240,7 @@ async def run_generation(
     from openai import AsyncOpenAI
 
     api_key = os.getenv("OPENAI_API_KEY")
+
     if not api_key:
         sys.exit(
             "OPENAI_API_KEY not set. Either:\n"
@@ -308,7 +309,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--max-tokens", type=int, default=1100,
-        help="Max output tokens per call. ~1100 covers a 600–800 word essay.",
+        help="Max output tokens per call. ~1100 covers a 600–700 word essay.",
     )
     parser.add_argument(
         "--concurrency", type=int, default=8,
@@ -324,7 +325,9 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    load_dotenv()  # OPENAI_API_KEY from .env if present
+    # override=True so a .env value wins over any stale OPENAI_API_KEY left
+    # in the OS environment (default load_dotenv silently keeps the OS one).
+    load_dotenv(override=True)
     config.ensure_dirs()
 
     if args.style == "D":
