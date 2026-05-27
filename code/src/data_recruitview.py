@@ -36,30 +36,57 @@ _KEEP_COLS = [
 ]
 
 
+_VIDEO_AUDIO_IGNORE = [
+    "videos/*", "*.mp4", "*.mkv", "*.webm", "*.mov", "*.avi",
+    "audio/*", "*.wav", "*.mp3", "*.m4a", "*.flac",
+]
+_METADATA_SUFFIXES = (".parquet", ".csv", ".jsonl", ".json")
+
+
 def load_recruitview(min_words: int = DEFAULT_MIN_WORDS) -> pd.DataFrame:
     """Load RECRUITVIEW from HuggingFace; keep OCEAN + metadata only.
 
-    Drops the video/audio columns *before* materializing to pandas so we never
-    pull video binaries into memory. Also filters rows whose transcript has
-    fewer than `min_words` words (silence / refusals).
+    Uses `huggingface_hub.snapshot_download` with `ignore_patterns` so the
+    ~15 GB of MP4 videos never hit disk. We read the dataset's parquet/csv
+    metadata file(s) directly and assemble the DataFrame.
+
+    Also filters rows whose transcript has fewer than `min_words` words
+    (silence / refusals).
     """
-    from datasets import load_dataset
+    from huggingface_hub import snapshot_download
 
-    ds = load_dataset(DATASET_ID)
+    local_dir = snapshot_download(
+        repo_id=DATASET_ID,
+        repo_type="dataset",
+        ignore_patterns=_VIDEO_AUDIO_IGNORE,
+    )
+    local = Path(local_dir)
 
-    # RECRUITVIEW ships as a single split (typically "train"); we recompute
-    # our own train/val/test, so combine whatever splits exist.
-    if hasattr(ds, "keys"):
-        parts: list[pd.DataFrame] = []
-        for split_name in ds.keys():
-            sub = ds[split_name]
-            drop_cols = [c for c in sub.column_names if c not in _KEEP_COLS]
-            sub = sub.remove_columns(drop_cols)
-            parts.append(sub.to_pandas())
-        df = pd.concat(parts, ignore_index=True)
+    # Find metadata files (parquet preferred; fall back to csv/jsonl/json).
+    parquets = sorted(local.rglob("*.parquet"))
+    if parquets:
+        dfs = [pd.read_parquet(p) for p in parquets]
     else:
-        drop_cols = [c for c in ds.column_names if c not in _KEEP_COLS]
-        df = ds.remove_columns(drop_cols).to_pandas()
+        meta_files: list[Path] = []
+        for suffix in _METADATA_SUFFIXES:
+            meta_files += sorted(local.rglob(f"*{suffix}"))
+        # Skip top-level README-style JSON if present.
+        meta_files = [p for p in meta_files if not p.name.lower().startswith("readme")]
+        if not meta_files:
+            raise RuntimeError(
+                f"No metadata files found in snapshot at {local}. "
+                f"Expected at least one .parquet/.csv/.jsonl/.json file."
+            )
+        dfs = []
+        for f in meta_files:
+            if f.suffix == ".csv":
+                dfs.append(pd.read_csv(f))
+            elif f.suffix == ".jsonl":
+                dfs.append(pd.read_json(f, lines=True))
+            else:  # .json
+                dfs.append(pd.read_json(f))
+
+    df = pd.concat(dfs, ignore_index=True)
 
     missing = set(_KEEP_COLS) - set(df.columns)
     if missing:
