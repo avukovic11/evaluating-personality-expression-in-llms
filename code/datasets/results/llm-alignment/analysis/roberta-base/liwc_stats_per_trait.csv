@@ -4,7 +4,7 @@ cEXT,word_count_log,humans_vs_high,248,1,0.36953659101446956,-0.5241935483870968
 cEXT,word_count_log,humans_vs_low,248,1,0.3732587784837281,-0.5201612903225806
 cEXT,avg_sentence_len,high_vs_low,1,1,1.0,-1.0
 cEXT,avg_sentence_len,humans_vs_high,248,1,0.20303072512792064,-0.7419354838709677
-cEXT,avg_sentence_len,humans_vs_low,248,1,0.13117838960680112,-0.8790322580645161
+cEXT,avg_sentence_len,humans_vs_low,248,1,0.13117838960680114,-0.8790322580645161
 cEXT,avg_word_len,high_vs_low,1,1,1.0,1.0
 cEXT,avg_word_len,humans_vs_high,248,1,0.09641170903902568,-0.967741935483871
 cEXT,avg_word_len,humans_vs_low,248,1,0.09923122934131942,-0.9596774193548387
@@ -88,9 +88,9 @@ cNEU,pron_3p,humans_vs_high,248,1,0.2747864418885094,-0.6370967741935484
 cNEU,pron_3p,humans_vs_low,248,1,0.807646623129457,-0.14516129032258066
 cNEU,negation,high_vs_low,1,1,1.0,1.0
 cNEU,negation,humans_vs_high,248,1,0.68150530003639,-0.24193548387096775
-cNEU,negation,humans_vs_low,248,1,0.11117212132735203,0.9274193548387096
+cNEU,negation,humans_vs_low,248,1,0.11117212132735205,0.9274193548387096
 cNEU,q_rate,high_vs_low,1,1,1.0,1.0
-cNEU,q_rate,humans_vs_high,248,1,0.07770747122776314,-0.9919354838709677
+cNEU,q_rate,humans_vs_high,248,1,0.07770747122776317,-0.9919354838709677
 cNEU,q_rate,humans_vs_low,248,1,0.9025742385377389,-0.07258064516129033
 cNEU,excl_rate,high_vs_low,1,1,1.0,0.0
 cNEU,excl_rate,humans_vs_high,248,1,0.4205232643259389,0.42338709677419356

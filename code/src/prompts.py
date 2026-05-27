@@ -33,42 +33,7 @@ SYSTEM_PROMPT = (
     "stream-of-consciousness writing."
 )
 
-# ---------------------------------------------------------------------------
-# Per-trait labels and descriptors for Style D HIGH/LOW
-# ---------------------------------------------------------------------------
-
-TRAIT_POLES: dict[str, dict[str, str]] = {
-    "cEXT": {
-        "high_label": "highly extraverted",
-        "high_descriptor": "outgoing, energetic, and socially engaged",
-        "low_label": "very introverted",
-        "low_descriptor": "reserved, prefers solitude, and finds social situations draining",
-    },
-    "cNEU": {
-        "high_label": "highly neurotic",
-        "high_descriptor": "anxious, easily stressed, and prone to negative emotions",
-        "low_label": "very emotionally stable",
-        "low_descriptor": "calm, even-tempered, and resilient under stress",
-    },
-    "cAGR": {
-        "high_label": "very agreeable",
-        "high_descriptor": "warm, cooperative, and considerate of others",
-        "low_label": "rather disagreeable",
-        "low_descriptor": "competitive, critical, and skeptical of others' motives",
-    },
-    "cCON": {
-        "high_label": "highly conscientious",
-        "high_descriptor": "organized, disciplined, and dependable",
-        "low_label": "very disorganized",
-        "low_descriptor": "spontaneous, careless with plans, and easily distracted",
-    },
-    "cOPN": {
-        "high_label": "highly open to experience",
-        "high_descriptor": "curious, imaginative, and drawn to novelty",
-        "low_label": "very conventional",
-        "low_descriptor": "practical, routine-oriented, and prefers the familiar",
-    },
-}
+# Per-trait labels and descriptors for Style D HIGH/LOW live in config.TRAIT_POLES.
 
 # Lower-case trait names for natural prompt phrasing.
 _TRAIT_NAME_LOWER = {k: v.lower() for k, v in config.TRAIT_NAMES.items()}
@@ -93,11 +58,11 @@ def style_d_user_prompt(trait: str, level: Level) -> str:
             "Write a 650–700 word stream-of-consciousness essay about whatever "
             "comes to mind."
         )
-    if trait not in TRAIT_POLES:
+    if trait not in config.TRAIT_POLES:
         raise ValueError(
-            f"Unknown trait {trait!r}; expected one of {list(TRAIT_POLES)}."
+            f"Unknown trait {trait!r}; expected one of {list(config.TRAIT_POLES)}."
         )
-    pole = TRAIT_POLES[trait]
+    pole = config.TRAIT_POLES[trait]
     label_key, descr_key = (
         ("high_label", "high_descriptor") if level == "HIGH"
         else ("low_label", "low_descriptor")
