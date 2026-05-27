@@ -19,15 +19,22 @@ LLM_OUTPUTS_DIR = DATA_DIR / "llm_generated"
 CHECKPOINTS_DIR = DATA_DIR / "checkpoints"
 RESULTS_DIR = DATA_DIR / "results"
 
+# Track 2 (RECRUITVIEW)
+RECRUITVIEW_SPLITS_DIR = DATA_DIR / "splits_recruitview"
+LLM_OUTPUTS_RV_DIR = DATA_DIR / "llm_generated_recruitview"
+
 
 def ensure_dirs() -> None:
     """Create all output directories if they do not yet exist. Idempotent."""
-    for d in (SPLITS_DIR, LLM_OUTPUTS_DIR, CHECKPOINTS_DIR, RESULTS_DIR):
+    for d in (
+        SPLITS_DIR, LLM_OUTPUTS_DIR, CHECKPOINTS_DIR, RESULTS_DIR,
+        RECRUITVIEW_SPLITS_DIR, LLM_OUTPUTS_RV_DIR,
+    ):
         d.mkdir(parents=True, exist_ok=True)
 
 
 # --- Label conventions --------------------------------------------------------
-# Column order in essays.csv: cEXT, cNEU, cAGR, cCON, cOPN.
+# Track 1 — Pennebaker Essays. Column order in essays.csv: cEXT, cNEU, cAGR, cCON, cOPN.
 TRAIT_COLS = ["cEXT", "cNEU", "cAGR", "cCON", "cOPN"]
 TRAIT_NAMES = {
     "cEXT": "Extraversion",
@@ -35,6 +42,22 @@ TRAIT_NAMES = {
     "cAGR": "Agreeableness",
     "cCON": "Conscientiousness",
     "cOPN": "Openness",
+}
+
+# Track 2 — RECRUITVIEW. HuggingFace dataset columns are lowercase, OCEAN order.
+RECRUITVIEW_TRAIT_COLS = [
+    "openness",
+    "conscientiousness",
+    "extraversion",
+    "agreeableness",
+    "neuroticism",
+]
+RECRUITVIEW_TRAIT_NAMES = {
+    "openness": "Openness",
+    "conscientiousness": "Conscientiousness",
+    "extraversion": "Extraversion",
+    "agreeableness": "Agreeableness",
+    "neuroticism": "Neuroticism",
 }
 
 # --- Modeling -----------------------------------------------------------------
