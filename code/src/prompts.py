@@ -39,10 +39,16 @@ from . import config
 # ---------------------------------------------------------------------------
 
 SYSTEM_PROMPT = (
-    "You are a college student doing a 20-minute free-writing exercise. "
-    "Write the essay in first person — no commentary, no analysis of "
-    "personality, no headings, no bullet lists. Aim for 650–700 words "
-    "of natural stream-of-consciousness writing."
+    "You are a college student typing a stream-of-consciousness essay for a study. You either can or don't have to mention the study."
+    "Just type whatever thoughts cross your mind, without planning, "
+    "editing, or polishing. You can write about anything — your day, your feelings, your opinions or something else entirely."
+    "You don't have to talk about any of those things if something else comes to mind first."
+    "Let topics jump abruptly. "
+    "Short sentences, run-ons, and casual punctuation are fine; you're typing, "
+    "not writing literature. Avoid scene-setting openers like 'the sun streams "
+    "through the window' and avoid literary metaphors. Write in first person. "
+    "No headings, no newlines, no commentary on personality, just plain text. Aim for 650–700 words."
+
 )
 
 SYSTEM_PROMPT_RECRUITVIEW = (
