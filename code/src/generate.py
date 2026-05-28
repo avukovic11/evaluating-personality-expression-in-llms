@@ -38,16 +38,22 @@ Run from `code/`:
     # Full-coverage Style A — sample all 230 train users:
     python -m src.generate --dataset recruitview --style A --n-synthetic-users 230
 
-    # ---- MULTI-RUN (append to JSONL, more samples per condition) ----
+    # ---- MULTI-RUN ----
+    # Easiest: just add --append on every re-run. New essays get a timestamp
+    # tag so they always land alongside previous ones without skipping.
+    python -m src.generate --dataset recruitview --style D --append
+    python -m src.generate --dataset recruitview --style D --append --seed 43
+
+    # Or pick your own tags manually:
     python -m src.generate --dataset recruitview --style D --run-tag run2 --seed 43
-    python -m src.generate --dataset recruitview --style D --run-tag run3 --seed 44
 
     # ---- USEFUL FLAGS ----
     --model gpt-4o-mini       # default
     --concurrency 8           # max in-flight requests
     --max-cost 5.0            # abort if estimated USD spend exceeds this
     --temperature 0.9         # sampling temperature
-    --run-tag <str>           # suffix essay_ids so a re-run appends instead of skipping
+    --append                  # auto-tag with a timestamp so a re-run always appends
+    --run-tag <str>           # manual tag suffix (overrides --append's auto-tag)
 """
 
 from __future__ import annotations
@@ -57,10 +63,25 @@ import asyncio
 import json
 import os
 import random
+import re
 import sys
 import time
+from datetime import datetime
 from pathlib import Path
 from typing import Any
+
+# Collapse all whitespace runs (newlines, tabs, multiple spaces) to a single
+# space. The Pennebaker essays are a single block of running prose with no
+# paragraph breaks; GPT defaults to inserting blank lines between paragraphs,
+# which both diverges from the train distribution and lets `\n` characters
+# show up verbatim in CSV outputs and downstream eval. Cheap to strip here.
+_WHITESPACE_RE = re.compile(r"\s+")
+
+
+def _normalize_text(text: str | None) -> str:
+    if not text:
+        return ""
+    return _WHITESPACE_RE.sub(" ", text).strip()
 
 import numpy as np
 from dotenv import load_dotenv
@@ -408,7 +429,7 @@ async def run_one(
             "prompt_tokens":     usage.prompt_tokens,
             "completion_tokens": usage.completion_tokens,
             "latency_s":         round(latency, 2),
-            "generated_text":    response.choices[0].message.content,
+            "generated_text":    _normalize_text(response.choices[0].message.content),
         })
         async with file_lock:
             with open(out_path, "a", encoding="utf-8") as f:
@@ -535,6 +556,15 @@ def main() -> None:
         ),
     )
     parser.add_argument(
+        "--append", action="store_true",
+        help=(
+            "Always generate fresh essays and append them to the JSONL. "
+            "If --run-tag is unset, auto-picks a tag from the current "
+            "timestamp so successive --append runs never collide with "
+            "each other or with existing records."
+        ),
+    )
+    parser.add_argument(
         "--prompt-variant", choices=list(PROMPT_VARIANTS), default="full",
         help=(
             "Style D descriptor handling. 'full' keeps the LIWC-style word "
@@ -577,15 +607,26 @@ def main() -> None:
     if args.max_tokens is None:
         args.max_tokens = 1100 if args.dataset == "essays" else 250
 
-    # Warn loudly if a non-default variant is used without a run-tag — the
-    # idempotent-resume check would otherwise skip everything as duplicates.
+    # --append: auto-pick a unique run-tag from the current timestamp so
+    # the new essays always get fresh ids and slide in alongside existing
+    # ones. If the user already passed --run-tag explicitly, honour it.
+    if args.append and not args.run_tag:
+        args.run_tag = "ap" + datetime.now().strftime("%Y%m%d%H%M%S")
+        print(
+            f"--append: auto-generated run-tag={args.run_tag!r}",
+            file=sys.stderr,
+        )
+
+    # Warn loudly if a non-default variant is used without disambiguation —
+    # the idempotent-resume check would otherwise skip everything as
+    # duplicates of the prior 'full' run.
     if args.prompt_variant != "full" and not args.run_tag:
         print(
-            f"WARN: --prompt-variant={args.prompt_variant} without --run-tag. "
-            f"If essays with these ids already exist in the JSONL (from a "
-            f"previous 'full' run), they will be skipped. Use --run-tag "
-            f"{args.prompt_variant.replace('-', '')} to keep both variants "
-            f"side-by-side.",
+            f"WARN: --prompt-variant={args.prompt_variant} without --run-tag "
+            f"or --append. If essays with these ids already exist in the "
+            f"JSONL (from a previous 'full' run), they will be skipped. "
+            f"Add --append (auto-tag) or --run-tag "
+            f"{args.prompt_variant.replace('-', '')} (manual tag).",
             file=sys.stderr,
         )
 
