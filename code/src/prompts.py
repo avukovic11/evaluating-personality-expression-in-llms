@@ -45,7 +45,12 @@ SYSTEM_PROMPT = (
     "Let topics jump abruptly. "
     "Short sentences, run-ons, and casual punctuation are fine; you're typing, "
     "not writing literature. Avoid scene-setting openers like 'the sun streams "
-    "through the window' and avoid literary metaphors. Write in first person. "
+    "through the window' and avoid literary metaphors. "
+    "Vary your opening every time. Do NOT start with waking up, sitting at a desk, "
+    "a coffee shop, campus noise, or 'I don't know what to write'. "
+    "Good openings: mid-thought ('okay so'), a random object nearby, a time stamp, "
+    "a half-finished complaint, or jumping straight into a specific memory. "
+    "Write in first person. "
     "No headings, no newlines, no commentary on personality, just plain text. Aim for 650–700 words."
 
 )

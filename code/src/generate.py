@@ -413,6 +413,13 @@ async def run_one(
             async with file_lock:
                 with open(errors_path, "a", encoding="utf-8") as f:
                     f.write(json.dumps(err, ensure_ascii=False) + "\n")
+                cost_state["completed"] += 1
+                print(
+                    f"  [{cost_state['completed']}/{cost_state['planned']}] "
+                    f"FAIL {plan['essay_id']}  {type(e).__name__}: {e}",
+                    file=sys.stderr,
+                    flush=True,
+                )
             return None
         latency = time.time() - start
         usage = response.usage
@@ -434,6 +441,14 @@ async def run_one(
         async with file_lock:
             with open(out_path, "a", encoding="utf-8") as f:
                 f.write(json.dumps(record, ensure_ascii=False) + "\n")
+            cost_state["completed"] += 1
+            print(
+                f"  [{cost_state['completed']}/{cost_state['planned']}] "
+                f"OK {plan['essay_id']}  "
+                f"{usage.completion_tokens} tok  {record['latency_s']}s  "
+                f"${cost:.5f}  (${cost_state['total']:.4f} total)",
+                flush=True,
+            )
         if cost_state["total"] > cost_state["max_cost"] and not cost_state["aborted"]:
             cost_state["aborted"] = True
             print(
@@ -470,8 +485,18 @@ async def run_generation(
     sem = asyncio.Semaphore(concurrency)
     file_lock = asyncio.Lock()
     cost_state: dict[str, Any] = {
-        "total": 0.0, "n": 0, "max_cost": max_cost, "aborted": False,
+        "total": 0.0,
+        "n": 0,
+        "max_cost": max_cost,
+        "aborted": False,
+        "planned": len(plans),
+        "completed": 0,
     }
+
+    print(
+        f"Generating {len(plans)} essays ({concurrency} concurrent)...",
+        flush=True,
+    )
 
     tasks = [
         asyncio.create_task(run_one(
@@ -481,19 +506,8 @@ async def run_generation(
         for plan in plans
     ]
 
-    done_count = 0
-    total = len(tasks)
     for fut in asyncio.as_completed(tasks):
         await fut
-        done_count += 1
-        if done_count % 10 == 0 or done_count == total or done_count <= 3:
-            avg = cost_state["total"] / cost_state["n"] if cost_state["n"] else 0.0
-            print(
-                f"  [{done_count}/{total}]  "
-                f"running ${cost_state['total']:.4f}  "
-                f"avg ${avg:.5f}/essay",
-                flush=True,
-            )
 
     await client.close()
 
