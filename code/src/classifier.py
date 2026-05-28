@@ -54,7 +54,12 @@ from transformers import (
 )
 
 from . import config
-from .baselines import metrics_per_trait, print_metrics, save_results
+from .baselines import (
+    metrics_per_trait,
+    metrics_per_trait_grouped,
+    print_metrics,
+    save_results,
+)
 
 
 # -----------------------------------------------------------------------------
@@ -558,6 +563,23 @@ def main() -> None:
         )
     label = "single-seed" if len(seeds) == 1 else f"ensemble (n={len(seeds)})"
     print_metrics(f"{name} {label}", ens_metrics)
+
+    # For RECRUITVIEW: compute user-aggregated metrics. Labels are user-level
+    # (every clip from the same user has the same z-score), so the clip-level
+    # rho is dragged down by within-user noise. The user-aggregated rho is
+    # the metric that matches the dataset's annotation unit and the number
+    # we report alongside it in the paper.
+    if task == "regression" and "user_no" in extra_cols:
+        user_metrics = metrics_per_trait_grouped(
+            test_y, ens_outputs, extra_cols["user_no"], trait_cols,
+        )
+        print_metrics(
+            f"{name} {label} — user-aggregated (n_users={user_metrics['n_groups']})",
+            {k: v for k, v in user_metrics.items() if k != "n_groups"},
+        )
+        # Attach as a sibling key so downstream tooling can read both.
+        ens_metrics = dict(ens_metrics)
+        ens_metrics["user_aggregated"] = user_metrics
 
     save_results(
         name,

@@ -117,6 +117,52 @@ def metrics_per_trait(
     return out
 
 
+def metrics_per_trait_grouped(
+    y_true: np.ndarray,
+    y_pred: np.ndarray,
+    group_ids: list[str],
+    trait_cols: list[str],
+) -> dict:
+    """Group-aggregated regression metrics.
+
+    Average predictions per `group_ids` (e.g. `user_no` on RECRUITVIEW) and
+    compare to each group's true score (constant within group by construction
+    — every RECRUITVIEW clip from the same user shares the user's z-score).
+
+    Per-clip metrics include within-user variance (each clip is a noisy
+    estimate of the user's personality); group-level metrics strip that
+    noise and report what the probe actually says about each *person*.
+    The labels in RECRUITVIEW are user-level, so user aggregation is the
+    metric that matches the dataset's annotation unit.
+    """
+    df = pd.DataFrame({"_g": group_ids})
+    for i, t in enumerate(trait_cols):
+        df[f"_t_{t}"] = y_true[:, i]
+        df[f"_p_{t}"] = y_pred[:, i]
+    agg = df.groupby("_g").agg(
+        **{f"_t_{t}": (f"_t_{t}", "first") for t in trait_cols},
+        **{f"_p_{t}": (f"_p_{t}", "mean") for t in trait_cols},
+    )
+    yt_g = np.column_stack([agg[f"_t_{t}"].to_numpy() for t in trait_cols])
+    yp_g = np.column_stack([agg[f"_p_{t}"].to_numpy() for t in trait_cols])
+
+    out: dict = {}
+    for i, trait in enumerate(trait_cols):
+        a, b = yt_g[:, i], yp_g[:, i]
+        out[trait] = {
+            "spearman": _safe_corr(spearmanr, a, b),
+            "pearson":  _safe_corr(pearsonr, a, b),
+            "mae":      float(mean_absolute_error(a, b)),
+            "r2":       float(r2_score(a, b)),
+        }
+    out["macro"] = {
+        k: float(np.nanmean([out[t][k] for t in trait_cols]))
+        for k in ("spearman", "pearson", "mae", "r2")
+    }
+    out["n_groups"] = int(len(agg))
+    return out
+
+
 def print_metrics(name: str, m: dict) -> None:
     """Print per-trait + macro metrics. Auto-detects task from keys."""
     sample = m[next(t for t in m if t != "macro")]
