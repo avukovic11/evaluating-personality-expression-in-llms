@@ -230,13 +230,21 @@ def style_d_recruitview_prompt(
 # ---------------------------------------------------------------------------
 
 # Natural-language fragments for each (trait, discretized-level) combination
-# in the Style A multi-trait prompt. Built once at import time.
-_A_RV_FRAGMENTS: dict[str, dict[str, str]] = {}
+# in the Style A multi-trait prompt. Two variant tables, parallel to the
+# Style D `variant` parameter: "full" includes the LIWC-style descriptor in
+# parens; "label-only" drops it.
+_A_RV_FRAGMENTS_FULL: dict[str, dict[str, str]] = {}
+_A_RV_FRAGMENTS_LABEL_ONLY: dict[str, dict[str, str]] = {}
 for _t in config.RECRUITVIEW_TRAIT_COLS:
     _pole = RECRUITVIEW_TRAIT_POLES[_t]
-    _A_RV_FRAGMENTS[_t] = {
+    _A_RV_FRAGMENTS_FULL[_t] = {
         "HIGH": f"high on {_t} ({_pole['high_descriptor']})",
         "LOW":  f"low on {_t} ({_pole['low_descriptor']})",
+        "MID":  f"around average on {_t}",
+    }
+    _A_RV_FRAGMENTS_LABEL_ONLY[_t] = {
+        "HIGH": f"high on {_t}",
+        "LOW":  f"low on {_t}",
         "MID":  f"around average on {_t}",
     }
 del _t, _pole
@@ -253,15 +261,22 @@ def discretize_z(z: float, threshold: float = 0.5) -> LevelA:
 
 def style_a_recruitview_prompt(
     levels: dict[str, LevelA], question: str,
+    variant: PromptVariant = "full",
 ) -> str:
     """Build the Style A user prompt from a discretized 5-trait profile.
 
     `levels` must map every `config.RECRUITVIEW_TRAIT_COLS` key to one of
-    "HIGH", "MID", "LOW".
+    "HIGH", "MID", "LOW". `variant` controls descriptor inclusion: "full"
+    keeps the LIWC-style descriptor in parens after each trait label,
+    "label-only" drops it.
     """
     missing = set(config.RECRUITVIEW_TRAIT_COLS) - levels.keys()
     if missing:
         raise ValueError(f"Profile missing traits: {missing}")
+    fragments = (
+        _A_RV_FRAGMENTS_FULL if variant == "full"
+        else _A_RV_FRAGMENTS_LABEL_ONLY
+    )
     parts: list[str] = []
     for t in config.RECRUITVIEW_TRAIT_COLS:
         lvl = levels[t]
@@ -269,7 +284,7 @@ def style_a_recruitview_prompt(
             raise ValueError(
                 f"Trait {t} level must be HIGH/MID/LOW; got {lvl!r}."
             )
-        parts.append(_A_RV_FRAGMENTS[t][lvl])
+        parts.append(fragments[t][lvl])
     trait_str = "; ".join(parts[:-1]) + "; and " + parts[-1]
     question = question.strip().rstrip("?") + "?"
     return (
@@ -361,10 +376,6 @@ def _dump_examples() -> None:
                     trait, level, _EXAMPLE_RV_QUESTION, variant=variant,
                 ))
 
-    print()
-    print("=" * 70)
-    print("RECRUITVIEW — STYLE A (example discretized profile)")
-    print("=" * 70)
     rv_levels: dict[str, LevelA] = {
         "openness":          "HIGH",
         "conscientiousness": "MID",
@@ -372,8 +383,15 @@ def _dump_examples() -> None:
         "agreeableness":     "LOW",
         "neuroticism":       "LOW",
     }
-    print(f"\nlevels = {rv_levels}")
-    print(style_a_recruitview_prompt(rv_levels, _EXAMPLE_RV_QUESTION))
+    for variant in PROMPT_VARIANTS:
+        print()
+        print("=" * 70)
+        print(f"RECRUITVIEW — STYLE A / variant={variant!r}")
+        print("=" * 70)
+        print(f"levels = {rv_levels}")
+        print(style_a_recruitview_prompt(
+            rv_levels, _EXAMPLE_RV_QUESTION, variant=variant,
+        ))
 
 
 if __name__ == "__main__":

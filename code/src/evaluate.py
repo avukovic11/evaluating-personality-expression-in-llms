@@ -446,11 +446,17 @@ def _print_style_a_summary(metrics: dict) -> None:
 def evaluate_style_a_recruitview(
     records: list[dict], preds: np.ndarray, out_dir: Path,
 ) -> dict:
-    """Per-trait Spearman/Pearson/MAE on z-scores + per-essay 5-vector ρ.
+    """Per-trait Spearman/Pearson/MAE on z-scores at two granularities.
 
     `preds` is (N, 5) raw predicted z-scores from the regression probe.
-    Records carry `intended_z` (dict[trait, float]) and `intended_levels`
-    (dict[trait, HIGH|MID|LOW]) attached at plan time.
+    Records carry `intended_z`, `intended_levels`, and `paired_user_no`.
+
+    Reports two parallel metric sets:
+      - per-essay: Spearman over N (intended_z, pred_z) pairs per trait.
+        Includes within-user noise from individual questions.
+      - per-user: average pred_z per `paired_user_no`, compare to that
+        user's (constant) intended_z. Matches how we evaluate the probe
+        on humans (user-level Spearman). The headline number for the paper.
     """
     out_dir.mkdir(parents=True, exist_ok=True)
     trait_cols = config.RECRUITVIEW_TRAIT_COLS
@@ -464,14 +470,11 @@ def evaluate_style_a_recruitview(
 
     metrics: dict = {
         "dataset": "recruitview",
-        "per_trait": {},
-        "macro": {},
-        "n": int(len(df)),
+        "per_essay": {"per_trait": {}, "macro": {}, "n": int(len(df))},
+        "per_user":  {"per_trait": {}, "macro": {}},
     }
-    spearmans, pearsons, maes = [], [], []
-    for trait in trait_cols:
-        yt = df[f"intended_z_{trait}"].to_numpy()
-        yp = df[f"pred_z_{trait}"].to_numpy()
+
+    def _stats(yt, yp):
         if np.std(yt) > 0 and np.std(yp) > 0:
             rho = float(spearmanr(yt, yp)[0])
             r = float(pearsonr(yt, yp)[0])
@@ -480,23 +483,50 @@ def evaluate_style_a_recruitview(
         else:
             rho = r = 0.0
         mae = float(np.abs(yt - yp).mean())
-        spearmans.append(rho)
-        pearsons.append(r)
-        maes.append(mae)
-        metrics["per_trait"][trait] = {
-            "spearman": rho,
-            "pearson":  r,
-            "mae":      mae,
+        return rho, r, mae
+
+    # --- Per-essay ---
+    rhos, rs, maes = [], [], []
+    for trait in trait_cols:
+        yt = df[f"intended_z_{trait}"].to_numpy()
+        yp = df[f"pred_z_{trait}"].to_numpy()
+        rho, r, mae = _stats(yt, yp)
+        rhos.append(rho); rs.append(r); maes.append(mae)
+        metrics["per_essay"]["per_trait"][trait] = {
+            "spearman": rho, "pearson": r, "mae": mae,
             "mean_intended_z": float(yt.mean()),
-            "mean_pred_z":     float(yp.mean()),
+            "mean_pred_z": float(yp.mean()),
         }
-    metrics["macro"] = {
-        "spearman": float(np.mean(spearmans)),
-        "pearson":  float(np.mean(pearsons)),
+    metrics["per_essay"]["macro"] = {
+        "spearman": float(np.mean(rhos)),
+        "pearson":  float(np.mean(rs)),
         "mae":      float(np.mean(maes)),
     }
 
-    # Per-essay profile correlation: Spearman over the 5-trait vector.
+    # --- Per-user (group by paired_user_no) ---
+    if "paired_user_no" in df.columns:
+        agg = df.groupby("paired_user_no").agg(
+            **{f"_t_{t}": (f"intended_z_{t}", "first") for t in trait_cols},
+            **{f"_p_{t}": (f"pred_z_{t}",     "mean")  for t in trait_cols},
+        )
+        n_users = int(len(agg))
+        u_rhos, u_rs, u_maes = [], [], []
+        for trait in trait_cols:
+            a = agg[f"_t_{trait}"].to_numpy()
+            b = agg[f"_p_{trait}"].to_numpy()
+            rho, r, mae = _stats(a, b)
+            u_rhos.append(rho); u_rs.append(r); u_maes.append(mae)
+            metrics["per_user"]["per_trait"][trait] = {
+                "spearman": rho, "pearson": r, "mae": mae,
+            }
+        metrics["per_user"]["macro"] = {
+            "spearman": float(np.mean(u_rhos)),
+            "pearson":  float(np.mean(u_rs)),
+            "mae":      float(np.mean(u_maes)),
+        }
+        metrics["per_user"]["n_users"] = n_users
+
+    # Per-essay 5-vector profile correlation (kept for compat / drill-down).
     intended_mat = df[[f"intended_z_{t}" for t in trait_cols]].to_numpy()
     pred_mat = df[[f"pred_z_{t}" for t in trait_cols]].to_numpy()
     per_essay_rho = np.empty(len(df), dtype=float)
@@ -505,8 +535,8 @@ def evaluate_style_a_recruitview(
         if np.std(a) == 0 or np.std(b) == 0:
             per_essay_rho[k] = np.nan
         else:
-            r = spearmanr(a, b)[0]
-            per_essay_rho[k] = np.nan if np.isnan(r) else float(r)
+            rr = spearmanr(a, b)[0]
+            per_essay_rho[k] = np.nan if np.isnan(rr) else float(rr)
     valid = ~np.isnan(per_essay_rho)
     metrics["per_essay_profile_rho"] = {
         "mean":   float(per_essay_rho[valid].mean()) if valid.any() else float("nan"),
@@ -532,16 +562,39 @@ def evaluate_style_a_recruitview(
 
 
 def _print_style_a_recruitview_summary(metrics: dict) -> None:
-    print(f"\n=== Style A (recruitview) — n={metrics['n']} paired answers ===")
-    print(f"  {'trait':<18}  {'rho':>6}  {'r':>6}  {'mae':>6}")
-    for trait, m in metrics["per_trait"].items():
-        print(
-            f"  {trait:<18}  {m['spearman']:>+6.3f}  "
-            f"{m['pearson']:>+6.3f}  {m['mae']:>6.3f}"
+    pe = metrics["per_essay"]
+    pu = metrics.get("per_user", {})
+    print(
+        f"\n=== Style A (recruitview) — {pe['n']} answers across "
+        f"{pu.get('n_users', '?')} synthetic users ==="
+    )
+    print(
+        f"  {'trait':<18}  "
+        f"{'rho/clip':>9} {'r/clip':>8} {'mae/clip':>9}  |  "
+        f"{'rho/user':>9} {'r/user':>8} {'mae/user':>9}"
+    )
+    for trait in pe["per_trait"]:
+        e = pe["per_trait"][trait]
+        u = pu.get("per_trait", {}).get(trait, {})
+        line = (
+            f"  {trait:<18}  "
+            f"{e['spearman']:>+9.3f} {e['pearson']:>+8.3f} {e['mae']:>9.3f}  |  "
         )
-    macro = metrics["macro"]
-    print(f"  {'macro':<18}  {macro['spearman']:>+6.3f}  "
-          f"{macro['pearson']:>+6.3f}  {macro['mae']:>6.3f}")
+        if u:
+            line += (
+                f"{u['spearman']:>+9.3f} {u['pearson']:>+8.3f} {u['mae']:>9.3f}"
+            )
+        else:
+            line += "(no user grouping)"
+        print(line)
+    em, um = pe["macro"], pu.get("macro", {})
+    line = (
+        f"  {'macro':<18}  "
+        f"{em['spearman']:>+9.3f} {em['pearson']:>+8.3f} {em['mae']:>9.3f}  |  "
+    )
+    if um:
+        line += f"{um['spearman']:>+9.3f} {um['pearson']:>+8.3f} {um['mae']:>9.3f}"
+    print(line)
     per = metrics["per_essay_profile_rho"]
     print(
         f"  per-essay profile Spearman ρ: mean={per['mean']:+.3f}  "

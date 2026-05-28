@@ -31,8 +31,12 @@ Run from `code/`:
     # ---- TRACK 2 (recruitview) ----
     python -m src.generate --dataset recruitview --style D \
         --n-per-trait-level 1 --n-neutral 1                     # dry run, 11 answers
+    python -m src.generate --dataset recruitview --style A \
+        --n-synthetic-users 3                                   # dry run, ~18 answers
     python -m src.generate --dataset recruitview --style D      # 1500 short answers
-    python -m src.generate --dataset recruitview --style A      # 500 paired answers
+    python -m src.generate --dataset recruitview --style A      # ~600 answers, 100 users
+    # Full-coverage Style A — sample all 230 train users:
+    python -m src.generate --dataset recruitview --style A --n-synthetic-users 230
 
     # ---- MULTI-RUN (append to JSONL, more samples per condition) ----
     python -m src.generate --dataset recruitview --style D --run-tag run2 --seed 43
@@ -243,42 +247,62 @@ def style_d_recruitview_plan(
 
 
 def style_a_recruitview_plan(
-    n_paired: int, seed: int, run_tag: str = "",
+    n_synthetic_users: int, seed: int,
+    run_tag: str = "", variant: PromptVariant = "full",
 ) -> list[dict[str, Any]]:
-    """Sample `n_paired` (user, question) rows from the train split.
+    """Sample `n_synthetic_users` users from train; for each, generate one
+    answer per their own (question_id, question) row.
 
-    Each plan carries both the continuous z-scores (`intended_z`) and the
-    discretized HIGH/MID/LOW labels (`intended_levels`) used in the prompt.
-    Evaluation compares the probe's predicted z-scores against `intended_z`.
+    The per-user output count varies (mean ~6 in RECRUITVIEW); 100 users
+    yield ~600 essays. Predictions are aggregated per `paired_user_no` at
+    eval time — that matches the dataset's user-level annotation unit and
+    is the same lens we use to report user-aggregated probe Spearman.
     """
     train_df = _load_recruitview_train_df()
-    sub = train_df.sample(n=n_paired, random_state=seed)
+    unique_users = sorted(train_df["user_no"].unique())
+    if n_synthetic_users > len(unique_users):
+        raise ValueError(
+            f"--n-synthetic-users={n_synthetic_users} exceeds the "
+            f"{len(unique_users)} unique train users available."
+        )
+    rng = np.random.default_rng(seed)
+    chosen = rng.choice(
+        np.asarray(unique_users, dtype=object),
+        size=n_synthetic_users, replace=False,
+    )
     plans: list[dict[str, Any]] = []
     suffix = _tag_suffix(run_tag)
-    for _, row in sub.iterrows():
+    for user_no in chosen:
+        user_no = str(user_no)
+        user_rows = train_df[train_df["user_no"] == user_no]
+        # z-scores are user-level (constant across a user's clips), so
+        # take from the first row and reuse for every answer this user
+        # generates.
+        first_row = user_rows.iloc[0]
         intended_z = {
-            t: float(row[t]) for t in config.RECRUITVIEW_TRAIT_COLS
+            t: float(first_row[t]) for t in config.RECRUITVIEW_TRAIT_COLS
         }
         intended_levels = {
             t: discretize_z(intended_z[t])
             for t in config.RECRUITVIEW_TRAIT_COLS
         }
-        question = str(row["question"])
-        user_no = str(row["user_no"])
-        qid = int(row["question_id"])
-        plans.append({
-            "essay_id":           f"A_rv_{user_no}_q{qid:03d}{suffix}",
-            "dataset":            "recruitview",
-            "prompt_style":       "A",
-            "paired_user_no":     user_no,
-            "paired_question_id": qid,
-            "paired_question":    question,
-            "intended_z":         intended_z,
-            "intended_levels":    intended_levels,
-            "user_prompt":        style_a_recruitview_prompt(
-                intended_levels, question,
-            ),
-        })
+        for _, row in user_rows.iterrows():
+            question = str(row["question"])
+            qid = int(row["question_id"])
+            plans.append({
+                "essay_id":           f"A_rv_{user_no}_q{qid:03d}{suffix}",
+                "dataset":            "recruitview",
+                "prompt_style":       "A",
+                "prompt_variant":     variant,
+                "paired_user_no":     user_no,
+                "paired_question_id": qid,
+                "paired_question":    question,
+                "intended_z":         intended_z,
+                "intended_levels":    intended_levels,
+                "user_prompt":        style_a_recruitview_prompt(
+                    intended_levels, question, variant,
+                ),
+            })
     return plans
 
 
@@ -488,7 +512,18 @@ def main() -> None:
     )
     parser.add_argument(
         "--n-paired", type=int, default=500,
-        help="Style A: number of paired profiles to sample. Default 500.",
+        help=(
+            "Style A (essays): number of paired profiles to sample. Default 500. "
+            "Ignored for --dataset recruitview (uses --n-synthetic-users instead)."
+        ),
+    )
+    parser.add_argument(
+        "--n-synthetic-users", type=int, default=100,
+        help=(
+            "Style A (recruitview): number of unique train users to sample. "
+            "Each user contributes ~6 essays (one per their original train "
+            "question). Default 100 → ~600 essays. Max 230 (= all train users)."
+        ),
     )
     parser.add_argument(
         "--run-tag", type=str, default="",
@@ -601,11 +636,14 @@ def main() -> None:
             )
         else:
             plans = style_a_recruitview_plan(
-                args.n_paired, args.seed, args.run_tag,
+                args.n_synthetic_users, args.seed,
+                args.run_tag, args.prompt_variant,
             )
             out_path = out_dir / "style_a_recruitview.jsonl"
             label = (
-                f"RecruitView · Style A — {len(plans)} paired answers"
+                f"RecruitView · Style A — {len(plans)} answers across "
+                f"{args.n_synthetic_users} synthetic users"
+                + variant_tag
                 + (f" (run-tag={args.run_tag!r})" if args.run_tag else "")
             )
     errors_path = out_path.with_name(out_path.stem + "_errors.jsonl")
