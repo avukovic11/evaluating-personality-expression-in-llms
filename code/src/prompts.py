@@ -67,33 +67,33 @@ SYSTEM_PROMPT_RECRUITVIEW = (
 _POLES_BY_NAME: dict[str, dict[str, str]] = {
     "extraversion": {
         "high_label": "highly extraverted",
-        "high_descriptor": "outgoing, energetic, and socially engaged",
+        "high_descriptor": "outgoing and energized by people, talkative, and socially bold",
         "low_label": "very introverted",
-        "low_descriptor": "reserved, prefers solitude, and finds social situations draining",
+        "low_descriptor": "quiet and inward-focused, reserved in groups, and drained by socializing",
     },
     "neuroticism": {
         "high_label": "highly neurotic",
-        "high_descriptor": "anxious, easily stressed, and prone to negative emotions",
+        "high_descriptor": "anxious and emotionally reactive, prone to worry and rumination",
         "low_label": "very emotionally stable",
-        "low_descriptor": "calm, even-tempered, and resilient under stress",
+        "low_descriptor": "calm and resilient, rarely upset, and steady under pressure",
     },
     "agreeableness": {
         "high_label": "very agreeable",
-        "high_descriptor": "warm, cooperative, and considerate of others",
+        "high_descriptor": "warm and trusting, cooperative, and considerate of others' feelings",
         "low_label": "rather disagreeable",
-        "low_descriptor": "competitive, critical, and skeptical of others' motives",
+        "low_descriptor": "blunt and skeptical, competitive, and quick to challenge others",
     },
     "conscientiousness": {
         "high_label": "highly conscientious",
-        "high_descriptor": "organized, disciplined, and dependable",
+        "high_descriptor": "organized and disciplined, dutiful, and careful about plans and deadlines",
         "low_label": "very disorganized",
-        "low_descriptor": "spontaneous, careless with plans, and easily distracted",
+        "low_descriptor": "impulsive and unstructured, easily distracted, and careless with obligations",
     },
     "openness": {
         "high_label": "highly open to experience",
-        "high_descriptor": "curious, imaginative, and drawn to novelty",
+        "high_descriptor": "intellectually curious and imaginative, drawn to ideas and new experiences",
         "low_label": "very conventional",
-        "low_descriptor": "practical, routine-oriented, and prefers the familiar",
+        "low_descriptor": "practical and tradition-minded, preferring routine over abstract speculation",
     },
 }
 
