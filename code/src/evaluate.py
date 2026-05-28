@@ -1,36 +1,43 @@
 """Evaluate LLM-generated essays against the trained personality probe.
 
-Two analyses, one per prompt style:
+Two analyses, one per prompt style, applied independently to each dataset
+(`--dataset essays` or `--dataset recruitview`):
 
 **Style D — single-trait isolated.**
 For each trait T:
-  - Build sigmoid-prob distributions on Style-D essays where the prompted trait
+  - Build probe-output distributions on Style-D essays where the prompted trait
     was T: LLM-HIGH, LLM-LOW. Plus the LLM-NEUTRAL pool (all NEUTRAL essays
     share an identical prompt; we pool across traits for more samples) and the
     human-test distribution (read from the trained classifier's saved preds).
+    For essays: sigmoid probabilities (0–1). For recruitview: raw z-scores.
   - Wasserstein-1 distances + 95% bootstrap CIs:
       W1(HIGH, LOW)        — primary "is the trait steerable?"
       W1(NEUTRAL, HIGH)    — does HIGH shift up relative to default?
       W1(NEUTRAL, LOW)     — does LOW shift down relative to default?
-      W1(humans, NEUTRAL)  — is GPT-4o-mini's default near humans?
+      W1(humans, NEUTRAL)  — is the model's default near humans?
   - Overlaid KDE per trait → one PNG per trait.
-  - Cross-trait contamination 5×5 heatmap: Δ(T → T') = mean(p_T' | HIGH on T) −
-    mean(p_T' | LOW on T). Diagonals = direct effect; off-diagonals = bleed.
+  - Cross-trait contamination 5×5 heatmap: Δ(T → T') = mean(score_T' | HIGH on T)
+    − mean(score_T' | LOW on T). Diagonals = direct effect; off-diagonals = bleed.
 
 **Style A — full multi-trait paired.**
-For each LLM essay vs the paired human's intended profile:
-  per-trait MAE | AUC | accuracy@0.5 + macro + profile-level exact match.
+  - Essays: per-trait MAE | AUC | accuracy@0.5 + macro + profile-level exact match
+    (paired binary profile).
+  - RecruitView: per-trait Spearman ρ | Pearson r | MAE on z-scores + macro +
+    per-essay 5-vector Spearman ρ between predicted and intended z-scores.
 
 The trained probe is loaded from
-`code/datasets/checkpoints/<model_slug>_seed42/`. Use `--model <hf-id>` to swap
-between RoBERTa / ModernBERT.
+`code/datasets/checkpoints/<results_slug>_seed42/`, where `results_slug` is
+`<model>` for essays and `<model>_recruitview` for recruitview.
 
-Outputs go to `code/datasets/results/llm-alignment/<style>/<model_slug>/`.
+Outputs go to:
+  essays      → `code/datasets/results/llm-alignment/<style>/<model_slug>/`
+  recruitview → `code/datasets/results/llm-alignment/recruitview/<style>/<model_slug>/`
 
 Run from `code/`:
     python -m src.evaluate --style D
-    python -m src.evaluate --style A
-    python -m src.evaluate --style D --model answerdotai/ModernBERT-base
+    python -m src.evaluate --style A --model answerdotai/ModernBERT-base
+    python -m src.evaluate --dataset recruitview --style D
+    python -m src.evaluate --dataset recruitview --style A
 """
 
 from __future__ import annotations
@@ -45,13 +52,54 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import torch
-from scipy.stats import wasserstein_distance
+from scipy.stats import pearsonr, spearmanr, wasserstein_distance
 from sklearn.metrics import roc_auc_score
 from tqdm import tqdm
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
 from . import config
-from .classifier import _sigmoid, get_device
+from .classifier import _result_dir_name, _sigmoid, get_device
+
+
+# ---------------------------------------------------------------------------
+# Dataset specs
+# ---------------------------------------------------------------------------
+
+def _trait_cols(dataset: str) -> list[str]:
+    return (
+        config.TRAIT_COLS if dataset == "essays"
+        else config.RECRUITVIEW_TRAIT_COLS
+    )
+
+
+def _trait_display(dataset: str, t: str) -> str:
+    if dataset == "essays":
+        return config.TRAIT_NAMES[t]
+    return config.RECRUITVIEW_TRAIT_NAMES[t]
+
+
+def _human_score_col(dataset: str, trait: str) -> str:
+    """Column in the human-test predictions CSV that holds the probe's score.
+
+    Essays      : sigmoid prob, column `prob_<trait>`.
+    RecruitView : raw regression output, column `pred_<trait>`.
+    """
+    return f"prob_{trait}" if dataset == "essays" else f"pred_{trait}"
+
+
+def _llm_outputs_dir(dataset: str) -> Path:
+    return config.LLM_OUTPUTS_DIR if dataset == "essays" else config.LLM_OUTPUTS_RV_DIR
+
+
+def _llm_align_root(dataset: str) -> Path:
+    base = config.RESULTS_DIR / "llm-alignment"
+    return base if dataset == "essays" else base / "recruitview"
+
+
+def _style_jsonl_name(dataset: str, style: str) -> str:
+    if dataset == "essays":
+        return "style_d_single_trait.jsonl" if style == "D" else "style_a_paired.jsonl"
+    return "style_d_recruitview.jsonl" if style == "D" else "style_a_recruitview.jsonl"
 
 
 # ---------------------------------------------------------------------------
@@ -73,12 +121,19 @@ def load_jsonl(path: Path) -> list[dict]:
     return out
 
 
-def load_human_test_probs(model_slug: str) -> pd.DataFrame:
-    path = config.RESULTS_DIR / model_slug / "test_predictions.csv"
+def load_human_test_probs(model_slug: str, dataset: str = "essays") -> pd.DataFrame:
+    """Load the human-test prediction CSV the classifier wrote.
+
+    `model_slug` is the *base* HF model id (e.g. "roberta-base"); the actual
+    directory adds `_recruitview` for the recruitview track.
+    """
+    results_slug = _result_dir_name(model_slug, dataset)
+    path = config.RESULTS_DIR / results_slug / "test_predictions.csv"
     if not path.exists():
         raise FileNotFoundError(
             f"Human-test predictions not at {path}. Train the probe first:\n"
-            f"  python -m src.classifier --train --model <hf-id>"
+            f"  python -m src.classifier --train --model <hf-id> "
+            f"--dataset {dataset}"
         )
     return pd.read_csv(path)
 
@@ -89,13 +144,20 @@ def load_human_test_probs(model_slug: str) -> pd.DataFrame:
 
 def score_essays(
     texts: list[str], model_slug: str, batch_size: int = 16,
+    dataset: str = "essays",
 ) -> np.ndarray:
-    """Run the trained probe over a list of essays. Returns (N, 5) sigmoid probs."""
-    ckpt = config.CHECKPOINTS_DIR / f"{model_slug}_seed42"
+    """Run the trained probe over a list of essays. Returns (N, 5) scores.
+
+    Essays      : sigmoid probabilities (0–1).
+    RecruitView : raw regression outputs (z-scores, no transform).
+    """
+    results_slug = _result_dir_name(model_slug, dataset)
+    ckpt = config.CHECKPOINTS_DIR / f"{results_slug}_seed42"
     if not ckpt.exists():
         raise FileNotFoundError(
             f"Probe checkpoint not at {ckpt}. Either:\n"
-            f"  1. Train it: python -m src.classifier --train --model <hf-id>\n"
+            f"  1. Train it: python -m src.classifier --train "
+            f"--dataset {dataset} --model <hf-id>\n"
             f"  2. Unzip the downloaded checkpoint zip into {ckpt}"
         )
     tokenizer = AutoTokenizer.from_pretrained(str(ckpt))
@@ -103,7 +165,7 @@ def score_essays(
     device = get_device()
     model.to(device).eval()
 
-    all_probs: list[np.ndarray] = []
+    all_out: list[np.ndarray] = []
     for i in tqdm(range(0, len(texts), batch_size), desc="scoring", leave=False):
         batch = texts[i:i + batch_size]
         inputs = tokenizer(
@@ -112,8 +174,8 @@ def score_essays(
         ).to(device)
         with torch.no_grad():
             logits = model(**inputs).logits.cpu().numpy()
-        all_probs.append(_sigmoid(logits))
-    return np.concatenate(all_probs, axis=0)
+        all_out.append(_sigmoid(logits) if dataset == "essays" else logits)
+    return np.concatenate(all_out, axis=0)
 
 
 # ---------------------------------------------------------------------------
@@ -149,23 +211,31 @@ def bootstrap_w1(
 
 def evaluate_style_d(
     records: list[dict], probs: np.ndarray, human_df: pd.DataFrame,
-    out_dir: Path, n_resamples: int,
+    out_dir: Path, n_resamples: int, dataset: str = "essays",
 ) -> dict:
     out_dir.mkdir(parents=True, exist_ok=True)
+    trait_cols = _trait_cols(dataset)
     df = pd.DataFrame(records)
-    for i, t in enumerate(config.TRAIT_COLS):
-        df[f"prob_{t}"] = probs[:, i]
+    # Canonical internal column: `score_<trait>`. For essays this is the
+    # sigmoid prob (0–1); for recruitview it's the raw predicted z-score.
+    for i, t in enumerate(trait_cols):
+        df[f"score_{t}"] = probs[:, i]
 
-    metrics: dict = {"per_trait": {}, "contamination": {}, "n_total": len(df)}
+    metrics: dict = {
+        "dataset": dataset,
+        "per_trait": {},
+        "contamination": {},
+        "n_total": len(df),
+    }
     n_neutral_total = int((df["prompted_level"] == "NEUTRAL").sum())
 
-    for trait in config.TRAIT_COLS:
+    for trait in trait_cols:
         sub = df[df["prompted_trait"] == trait]
-        high = sub.loc[sub["prompted_level"] == "HIGH", f"prob_{trait}"].to_numpy()
-        low = sub.loc[sub["prompted_level"] == "LOW", f"prob_{trait}"].to_numpy()
+        high = sub.loc[sub["prompted_level"] == "HIGH", f"score_{trait}"].to_numpy()
+        low = sub.loc[sub["prompted_level"] == "LOW", f"score_{trait}"].to_numpy()
         # Pool NEUTRAL across traits (all NEUTRAL prompts are identical).
-        neutral = df.loc[df["prompted_level"] == "NEUTRAL", f"prob_{trait}"].to_numpy()
-        humans = human_df[f"prob_{trait}"].to_numpy()
+        neutral = df.loc[df["prompted_level"] == "NEUTRAL", f"score_{trait}"].to_numpy()
+        humans = human_df[_human_score_col(dataset, trait)].to_numpy()
 
         metrics["per_trait"][trait] = {
             "n_high": int(len(high)),
@@ -181,41 +251,43 @@ def evaluate_style_d(
             "w1_neutral_low":    bootstrap_w1(neutral, low, n_resamples),
             "w1_humans_neutral": bootstrap_w1(humans, neutral, n_resamples),
         }
-        _plot_kde_for_trait(trait, humans, neutral, high, low, out_dir)
+        _plot_kde_for_trait(trait, humans, neutral, high, low, out_dir, dataset)
 
-    # Cross-trait contamination heatmap
-    contam = np.full((len(config.TRAIT_COLS), len(config.TRAIT_COLS)), np.nan)
-    for i, t_prompt in enumerate(config.TRAIT_COLS):
+    # Cross-trait contamination heatmap (mean(HIGH) − mean(LOW)).
+    contam = np.full((len(trait_cols), len(trait_cols)), np.nan)
+    for i, t_prompt in enumerate(trait_cols):
         sub = df[df["prompted_trait"] == t_prompt]
         h = sub[sub["prompted_level"] == "HIGH"]
         l = sub[sub["prompted_level"] == "LOW"]
         if len(h) and len(l):
-            for j, t_score in enumerate(config.TRAIT_COLS):
-                contam[i, j] = h[f"prob_{t_score}"].mean() - l[f"prob_{t_score}"].mean()
+            for j, t_score in enumerate(trait_cols):
+                contam[i, j] = (
+                    h[f"score_{t_score}"].mean() - l[f"score_{t_score}"].mean()
+                )
     metrics["contamination"] = {
-        config.TRAIT_COLS[i]: {
-            config.TRAIT_COLS[j]: (None if np.isnan(contam[i, j]) else float(contam[i, j]))
-            for j in range(len(config.TRAIT_COLS))
+        trait_cols[i]: {
+            trait_cols[j]: (None if np.isnan(contam[i, j]) else float(contam[i, j]))
+            for j in range(len(trait_cols))
         }
-        for i in range(len(config.TRAIT_COLS))
+        for i in range(len(trait_cols))
     }
-    _plot_contamination(contam, out_dir)
+    _plot_contamination(contam, trait_cols, out_dir, dataset)
 
-    # Persist
     (out_dir / "metrics.json").write_text(
         json.dumps(metrics, indent=2), encoding="utf-8"
     )
-    # Also save scored essays for fast re-analysis later
     keep_cols = ["essay_id", "prompted_trait", "prompted_level"] + [
-        f"prob_{t}" for t in config.TRAIT_COLS
+        f"score_{t}" for t in trait_cols
     ]
     df[keep_cols].to_csv(out_dir / "scored_essays.csv", index=False)
 
-    _print_style_d_summary(metrics, n_neutral_total)
+    _print_style_d_summary(metrics, n_neutral_total, dataset)
     return metrics
 
 
-def _plot_kde_for_trait(trait, humans, neutral, high, low, out_dir: Path) -> None:
+def _plot_kde_for_trait(
+    trait, humans, neutral, high, low, out_dir: Path, dataset: str,
+) -> None:
     fig, ax = plt.subplots(figsize=(7, 4))
     layers = [
         ("humans (test)", humans, "gray"),
@@ -223,33 +295,56 @@ def _plot_kde_for_trait(trait, humans, neutral, high, low, out_dir: Path) -> Non
         ("LLM HIGH",      high,    "C2"),
         ("LLM LOW",       low,     "C3"),
     ]
+    if dataset == "essays":
+        kde_clip = (0, 1)
+        xlim = (0, 1)
+        xlabel = f"predicted P({trait}=high)"
+    else:
+        # Empirical range of the probe's predicted z-scores plus a small pad.
+        all_vals = np.concatenate([arr for _, arr, _ in layers if len(arr)])
+        pad = 0.3
+        xlim = (
+            float(np.nanmin(all_vals) - pad) if len(all_vals) else -3.0,
+            float(np.nanmax(all_vals) + pad) if len(all_vals) else 3.0,
+        )
+        kde_clip = xlim
+        xlabel = f"predicted z-score ({trait})"
+
     for label, arr, color in layers:
         if len(arr) >= 2:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 sns.kdeplot(arr, ax=ax, label=f"{label} (n={len(arr)})",
-                            color=color, fill=True, alpha=0.25, clip=(0, 1))
+                            color=color, fill=True, alpha=0.25, clip=kde_clip)
         elif len(arr) == 1:
             ax.axvline(arr[0], color=color, linestyle=":",
                        label=f"{label} (n=1, val={arr[0]:.2f})")
-    ax.set_xlim(0, 1)
-    ax.set_xlabel(f"predicted P({trait}=high)")
+    ax.set_xlim(*xlim)
+    ax.set_xlabel(xlabel)
     ax.set_ylabel("density")
-    ax.set_title(f"{trait} ({config.TRAIT_NAMES[trait]}) — Style D distributions")
+    ax.set_title(
+        f"{trait} ({_trait_display(dataset, trait)}) — Style D distributions"
+    )
     ax.legend(loc="best", fontsize=8)
     fig.tight_layout()
     fig.savefig(out_dir / f"density_{trait}.png", dpi=120)
     plt.close(fig)
 
 
-def _plot_contamination(contam: np.ndarray, out_dir: Path) -> None:
+def _plot_contamination(
+    contam: np.ndarray, trait_cols: list[str], out_dir: Path, dataset: str,
+) -> None:
     fig, ax = plt.subplots(figsize=(6.5, 5))
     vmax = max(np.nanmax(np.abs(contam)), 0.01)
+    cbar_label = (
+        "Δ prob (HIGH − LOW)" if dataset == "essays"
+        else "Δ z-score (HIGH − LOW)"
+    )
     sns.heatmap(
         contam, annot=True, fmt=".2f", cmap="RdBu_r",
         vmin=-vmax, vmax=vmax, center=0,
-        xticklabels=config.TRAIT_COLS, yticklabels=config.TRAIT_COLS,
-        cbar_kws={"label": "Δ prob (HIGH − LOW)"},
+        xticklabels=trait_cols, yticklabels=trait_cols,
+        cbar_kws={"label": cbar_label},
         ax=ax,
     )
     ax.set_xlabel("Scored trait")
@@ -260,14 +355,18 @@ def _plot_contamination(contam: np.ndarray, out_dir: Path) -> None:
     plt.close(fig)
 
 
-def _print_style_d_summary(metrics: dict, n_neutral_total: int) -> None:
-    print(f"\n=== Style D — {metrics['n_total']} essays "
+def _print_style_d_summary(
+    metrics: dict, n_neutral_total: int, dataset: str = "essays",
+) -> None:
+    item_label = "essays" if dataset == "essays" else "answers"
+    width = 6 if dataset == "essays" else 18
+    print(f"\n=== Style D ({dataset}) — {metrics['n_total']} {item_label} "
           f"({n_neutral_total} NEUTRAL pooled) ===")
-    print(f"  {'trait':<6} {'n_hi':>4} {'n_lo':>4}  "
+    print(f"  {'trait':<{width}} {'n_hi':>4} {'n_lo':>4}  "
           f"{'W1(H,L)':>10} {'W1(N,H)':>10} {'W1(N,L)':>10} {'W1(hum,N)':>10}")
     for trait, m in metrics["per_trait"].items():
         print(
-            f"  {trait:<6} {m['n_high']:>4} {m['n_low']:>4}  "
+            f"  {trait:<{width}} {m['n_high']:>4} {m['n_low']:>4}  "
             f"{m['w1_high_low']['w1']:>10.3f} "
             f"{m['w1_neutral_high']['w1']:>10.3f} "
             f"{m['w1_neutral_low']['w1']:>10.3f} "
@@ -330,7 +429,7 @@ def evaluate_style_a(records: list[dict], probs: np.ndarray, out_dir: Path) -> d
 
 
 def _print_style_a_summary(metrics: dict) -> None:
-    print(f"\n=== Style A — n={metrics['n']} paired essays ===")
+    print(f"\n=== Style A (essays) — n={metrics['n']} paired essays ===")
     print(f"  {'trait':<6}  {'acc':>5}  {'auc':>5}  {'mae':>5}  ({'intended H/L'})")
     for trait, m in metrics["per_trait"].items():
         print(
@@ -344,17 +443,131 @@ def _print_style_a_summary(metrics: dict) -> None:
     print(f"  profile exact match: {metrics['profile_exact_match']:.3f}")
 
 
+def evaluate_style_a_recruitview(
+    records: list[dict], preds: np.ndarray, out_dir: Path,
+) -> dict:
+    """Per-trait Spearman/Pearson/MAE on z-scores + per-essay 5-vector ρ.
+
+    `preds` is (N, 5) raw predicted z-scores from the regression probe.
+    Records carry `intended_z` (dict[trait, float]) and `intended_levels`
+    (dict[trait, HIGH|MID|LOW]) attached at plan time.
+    """
+    out_dir.mkdir(parents=True, exist_ok=True)
+    trait_cols = config.RECRUITVIEW_TRAIT_COLS
+    df = pd.DataFrame(records)
+    for i, t in enumerate(trait_cols):
+        df[f"pred_z_{t}"] = preds[:, i]
+        df[f"intended_z_{t}"] = df["intended_z"].apply(lambda d, t=t: float(d[t]))
+        df[f"intended_level_{t}"] = df["intended_levels"].apply(
+            lambda d, t=t: d[t]
+        )
+
+    metrics: dict = {
+        "dataset": "recruitview",
+        "per_trait": {},
+        "macro": {},
+        "n": int(len(df)),
+    }
+    spearmans, pearsons, maes = [], [], []
+    for trait in trait_cols:
+        yt = df[f"intended_z_{trait}"].to_numpy()
+        yp = df[f"pred_z_{trait}"].to_numpy()
+        if np.std(yt) > 0 and np.std(yp) > 0:
+            rho = float(spearmanr(yt, yp)[0])
+            r = float(pearsonr(yt, yp)[0])
+            rho = 0.0 if np.isnan(rho) else rho
+            r = 0.0 if np.isnan(r) else r
+        else:
+            rho = r = 0.0
+        mae = float(np.abs(yt - yp).mean())
+        spearmans.append(rho)
+        pearsons.append(r)
+        maes.append(mae)
+        metrics["per_trait"][trait] = {
+            "spearman": rho,
+            "pearson":  r,
+            "mae":      mae,
+            "mean_intended_z": float(yt.mean()),
+            "mean_pred_z":     float(yp.mean()),
+        }
+    metrics["macro"] = {
+        "spearman": float(np.mean(spearmans)),
+        "pearson":  float(np.mean(pearsons)),
+        "mae":      float(np.mean(maes)),
+    }
+
+    # Per-essay profile correlation: Spearman over the 5-trait vector.
+    intended_mat = df[[f"intended_z_{t}" for t in trait_cols]].to_numpy()
+    pred_mat = df[[f"pred_z_{t}" for t in trait_cols]].to_numpy()
+    per_essay_rho = np.empty(len(df), dtype=float)
+    for k in range(len(df)):
+        a, b = intended_mat[k], pred_mat[k]
+        if np.std(a) == 0 or np.std(b) == 0:
+            per_essay_rho[k] = np.nan
+        else:
+            r = spearmanr(a, b)[0]
+            per_essay_rho[k] = np.nan if np.isnan(r) else float(r)
+    valid = ~np.isnan(per_essay_rho)
+    metrics["per_essay_profile_rho"] = {
+        "mean":   float(per_essay_rho[valid].mean()) if valid.any() else float("nan"),
+        "median": float(np.median(per_essay_rho[valid])) if valid.any() else float("nan"),
+        "n_valid": int(valid.sum()),
+    }
+
+    (out_dir / "metrics.json").write_text(
+        json.dumps(metrics, indent=2), encoding="utf-8"
+    )
+    keep_cols = (
+        ["essay_id", "paired_user_no", "paired_question_id"]
+        + [f"intended_z_{t}" for t in trait_cols]
+        + [f"intended_level_{t}" for t in trait_cols]
+        + [f"pred_z_{t}" for t in trait_cols]
+    )
+    df["per_essay_profile_rho"] = per_essay_rho
+    keep_cols.append("per_essay_profile_rho")
+    df[keep_cols].to_csv(out_dir / "predictions.csv", index=False)
+
+    _print_style_a_recruitview_summary(metrics)
+    return metrics
+
+
+def _print_style_a_recruitview_summary(metrics: dict) -> None:
+    print(f"\n=== Style A (recruitview) — n={metrics['n']} paired answers ===")
+    print(f"  {'trait':<18}  {'rho':>6}  {'r':>6}  {'mae':>6}")
+    for trait, m in metrics["per_trait"].items():
+        print(
+            f"  {trait:<18}  {m['spearman']:>+6.3f}  "
+            f"{m['pearson']:>+6.3f}  {m['mae']:>6.3f}"
+        )
+    macro = metrics["macro"]
+    print(f"  {'macro':<18}  {macro['spearman']:>+6.3f}  "
+          f"{macro['pearson']:>+6.3f}  {macro['mae']:>6.3f}")
+    per = metrics["per_essay_profile_rho"]
+    print(
+        f"  per-essay profile Spearman ρ: mean={per['mean']:+.3f}  "
+        f"median={per['median']:+.3f}  (n_valid={per['n_valid']})"
+    )
+
+
 # ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument(
+        "--dataset", choices=["essays", "recruitview"], default="essays",
+        help="Which dataset's probe + LLM essays to evaluate.",
+    )
     parser.add_argument("--style", choices=["D", "A"], required=True)
     parser.add_argument(
         "--model", type=str, default=config.CLASSIFIER_MODEL,
-        help=f"Probe HF id; default {config.CLASSIFIER_MODEL}. "
-             f"Checkpoint must exist at <CHECKPOINTS_DIR>/<model_slug>_seed42.",
+        help=(
+            f"Probe HF id; default {config.CLASSIFIER_MODEL}. "
+            "The checkpoint dir is <CHECKPOINTS_DIR>/<model>_seed42 for "
+            "essays and <CHECKPOINTS_DIR>/<model>_recruitview_seed42 for "
+            "recruitview (matches classifier.py)."
+        ),
     )
     parser.add_argument(
         "--batch-size", type=int, default=16,
@@ -369,14 +582,12 @@ def main() -> None:
     config.ensure_dirs()
     model_slug = args.model.split("/")[-1]
 
-    if args.style == "D":
-        jsonl = config.LLM_OUTPUTS_DIR / "style_d_single_trait.jsonl"
-        out_dir = config.RESULTS_DIR / "llm-alignment" / "style_d" / model_slug
-    else:
-        jsonl = config.LLM_OUTPUTS_DIR / "style_a_paired.jsonl"
-        out_dir = config.RESULTS_DIR / "llm-alignment" / "style_a" / model_slug
+    style_subdir = "style_d" if args.style == "D" else "style_a"
+    jsonl = _llm_outputs_dir(args.dataset) / _style_jsonl_name(args.dataset, args.style)
+    out_dir = _llm_align_root(args.dataset) / style_subdir / model_slug
 
     records = load_jsonl(jsonl)
+    print(f"dataset : {args.dataset}")
     print(f"essays  : {len(records)} loaded from {jsonl}")
     print(f"probe   : {args.model}")
     print(f"output  : {out_dir}")
@@ -394,17 +605,25 @@ def main() -> None:
         if len(records) < 20:
             print(
                 f"WARN: only {len(records)} paired essays. "
-                f"Per-trait AUC needs both classes and is unstable below ~20."
+                f"Per-trait metrics are unstable below ~20 samples."
             )
 
     texts = [r["generated_text"] for r in records]
-    probs = score_essays(texts, model_slug, batch_size=args.batch_size)
+    probs = score_essays(
+        texts, model_slug, batch_size=args.batch_size, dataset=args.dataset,
+    )
 
     if args.style == "D":
-        human_df = load_human_test_probs(model_slug)
-        evaluate_style_d(records, probs, human_df, out_dir, args.bootstrap)
+        human_df = load_human_test_probs(model_slug, dataset=args.dataset)
+        evaluate_style_d(
+            records, probs, human_df, out_dir, args.bootstrap,
+            dataset=args.dataset,
+        )
     else:
-        evaluate_style_a(records, probs, out_dir)
+        if args.dataset == "essays":
+            evaluate_style_a(records, probs, out_dir)
+        else:
+            evaluate_style_a_recruitview(records, probs, out_dir)
 
     print(f"\nDone. Artifacts in {out_dir}")
 

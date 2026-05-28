@@ -1,6 +1,6 @@
 """Prompt templates for the LLM generation phase.
 
-Two styles:
+Two styles, each instantiated per dataset:
   - **Style D** (single-trait isolated, primary): for each trait T and each level
     {HIGH, LOW, NEUTRAL}, build a prompt that conditions on T alone. NEUTRAL
     omits trait language entirely; HIGH/LOW name the trait pole and follow with
@@ -8,9 +8,21 @@ Two styles:
     similar in length to avoid prompt-length confounds.
   - **Style A** (full multi-trait paired, secondary): list all 5 traits at the
     human profile levels in a single prompt. Tests realistic multi-trait control.
+    For RECRUITVIEW the profile is discretized at ±0.5σ → HIGH/MID/LOW.
 
-Both styles share a system message that steers the model toward the dataset's
-stream-of-consciousness register and away from meta-commentary about personality.
+Each dataset has its own system message and length target:
+  - Pennebaker Essays  → 20-minute stream-of-consciousness, 650–700 words.
+  - RECRUITVIEW        → spoken interview answer, 60–100 words.
+
+The trait descriptors themselves (TRAIT_POLES) are personality properties and
+shared across datasets, keyed by full lowercase trait name.
+
+Style D prompts come in two variants:
+  - "full"        → "as someone who is highly extraverted — outgoing,
+                     energetic, and socially engaged" (default)
+  - "label-only"  → "as someone who is highly extraverted"
+Comparing the two disentangles lexical instruction-following (parroting the
+descriptor words) from genuine personality-style steering.
 
 Dump example prompts:
     python -m src.prompts
@@ -23,51 +35,70 @@ from typing import Literal
 from . import config
 
 # ---------------------------------------------------------------------------
-# Shared system message
+# System messages — one per dataset register
 # ---------------------------------------------------------------------------
 
 SYSTEM_PROMPT = (
     "You are a college student doing a 20-minute free-writing exercise. "
-    "Write the essay only — no commentary, no analysis of personality, "
-    "no headings, no bullet lists. Aim for 650–700 words of natural "
-    "stream-of-consciousness writing."
+    "Write the essay in first person — no commentary, no analysis of "
+    "personality, no headings, no bullet lists. Aim for 650–700 words "
+    "of natural stream-of-consciousness writing."
+)
+
+SYSTEM_PROMPT_RECRUITVIEW = (
+    "You are a college student doing a mock job interview as part of a "
+    "research study. Speak naturally in first person, as if recording a "
+    "short clip — no preamble, no "
+    "headings or lists. Aim for 60–100 words."
 )
 
 # ---------------------------------------------------------------------------
 # Per-trait labels and descriptors for Style D HIGH/LOW
 # ---------------------------------------------------------------------------
 
-TRAIT_POLES: dict[str, dict[str, str]] = {
-    "cEXT": {
+# Single source of truth, keyed by full lowercase trait name. Used by both
+# the essays-style and recruitview-style prompt builders.
+_POLES_BY_NAME: dict[str, dict[str, str]] = {
+    "extraversion": {
         "high_label": "highly extraverted",
         "high_descriptor": "outgoing, energetic, and socially engaged",
         "low_label": "very introverted",
         "low_descriptor": "reserved, prefers solitude, and finds social situations draining",
     },
-    "cNEU": {
+    "neuroticism": {
         "high_label": "highly neurotic",
         "high_descriptor": "anxious, easily stressed, and prone to negative emotions",
         "low_label": "very emotionally stable",
         "low_descriptor": "calm, even-tempered, and resilient under stress",
     },
-    "cAGR": {
+    "agreeableness": {
         "high_label": "very agreeable",
         "high_descriptor": "warm, cooperative, and considerate of others",
         "low_label": "rather disagreeable",
         "low_descriptor": "competitive, critical, and skeptical of others' motives",
     },
-    "cCON": {
+    "conscientiousness": {
         "high_label": "highly conscientious",
         "high_descriptor": "organized, disciplined, and dependable",
         "low_label": "very disorganized",
         "low_descriptor": "spontaneous, careless with plans, and easily distracted",
     },
-    "cOPN": {
+    "openness": {
         "high_label": "highly open to experience",
         "high_descriptor": "curious, imaginative, and drawn to novelty",
         "low_label": "very conventional",
         "low_descriptor": "practical, routine-oriented, and prefers the familiar",
     },
+}
+
+# Essays-style view: keyed by cEXT/cNEU/cAGR/cCON/cOPN.
+TRAIT_POLES: dict[str, dict[str, str]] = {
+    t: _POLES_BY_NAME[config.TRAIT_NAMES[t].lower()] for t in config.TRAIT_COLS
+}
+
+# RECRUITVIEW view: keyed by full lowercase name (matches dataset columns).
+RECRUITVIEW_TRAIT_POLES: dict[str, dict[str, str]] = {
+    t: _POLES_BY_NAME[t] for t in config.RECRUITVIEW_TRAIT_COLS
 }
 
 # Lower-case trait names for natural prompt phrasing.
@@ -76,17 +107,37 @@ _TRAIT_NAME_LOWER = {k: v.lower() for k, v in config.TRAIT_NAMES.items()}
 Level = Literal["HIGH", "LOW", "NEUTRAL"]
 LEVELS: tuple[Level, ...] = ("HIGH", "LOW", "NEUTRAL")
 
+# Style A on RECRUITVIEW discretizes continuous z-scores at ±0.5σ → 3 bins.
+LevelA = Literal["HIGH", "MID", "LOW"]
+LEVELS_A_RECRUITVIEW: tuple[LevelA, ...] = ("HIGH", "MID", "LOW")
+
+# Style D descriptor variants:
+#   "full"        — "as someone who is highly extraverted — outgoing, energetic,
+#                    and socially engaged." Lexically primes the LLM with words
+#                    the probe was trained to detect.
+#   "label-only"  — "as someone who is highly extraverted." Tests whether the
+#                    trait label alone shifts style, without LIWC-style priming.
+# Run both and compare W1(HIGH, LOW) to disentangle lexical instruction-following
+# from genuine style steering.
+PromptVariant = Literal["full", "label-only"]
+PROMPT_VARIANTS: tuple[PromptVariant, ...] = ("full", "label-only")
+
 
 # ---------------------------------------------------------------------------
 # Style D — single-trait isolated
 # ---------------------------------------------------------------------------
 
-def style_d_user_prompt(trait: str, level: Level) -> str:
+def style_d_user_prompt(
+    trait: str, level: Level, variant: PromptVariant = "full",
+) -> str:
     """Build the Style D user prompt for (trait, level).
 
     NEUTRAL omits trait language entirely so that all 5 traits' NEUTRAL prompts
     are identical — they give a single baseline distribution for GPT-4o-mini's
     default personality.
+
+    `variant="full"` includes the LIWC-style descriptor after the trait label;
+    `variant="label-only"` drops it to test trait-label-only steering.
     """
     if level == "NEUTRAL":
         return (
@@ -98,14 +149,12 @@ def style_d_user_prompt(trait: str, level: Level) -> str:
             f"Unknown trait {trait!r}; expected one of {list(TRAIT_POLES)}."
         )
     pole = TRAIT_POLES[trait]
-    label_key, descr_key = (
-        ("high_label", "high_descriptor") if level == "HIGH"
-        else ("low_label", "low_descriptor")
-    )
+    label = pole["high_label" if level == "HIGH" else "low_label"]
+    descriptor = pole["high_descriptor" if level == "HIGH" else "low_descriptor"]
+    suffix = f" — {descriptor}" if variant == "full" else ""
     return (
         f"Write a 650–700 word stream-of-consciousness essay about whatever "
-        f"comes to mind, as someone who is {pole[label_key]} — "
-        f"{pole[descr_key]}."
+        f"comes to mind, as someone who is {label}{suffix}."
     )
 
 
@@ -138,13 +187,121 @@ def style_a_user_prompt(profile: dict[str, int]) -> str:
 
 
 # ---------------------------------------------------------------------------
+# RECRUITVIEW — Style D (single-trait isolated, interview-answer register)
+# ---------------------------------------------------------------------------
+
+def style_d_recruitview_prompt(
+    trait: str, level: Level, question: str,
+    variant: PromptVariant = "full",
+) -> str:
+    """Build the Style D user prompt for a RECRUITVIEW interview answer.
+
+    The interview question is included verbatim so the model has something
+    concrete to answer; the trait conditioning is layered on top. NEUTRAL
+    omits trait language so the 5 traits collapse to one baseline pool.
+
+    `variant="full"` includes the LIWC-style descriptor after the trait label;
+    `variant="label-only"` drops it to test trait-label-only steering.
+    """
+    question = question.strip().rstrip("?") + "?"
+    if level == "NEUTRAL":
+        return (
+            f"Interview question: {question}\n\n"
+            f"Answer this question in 60–100 words."
+        )
+    if trait not in RECRUITVIEW_TRAIT_POLES:
+        raise ValueError(
+            f"Unknown trait {trait!r}; expected one of "
+            f"{list(RECRUITVIEW_TRAIT_POLES)}."
+        )
+    pole = RECRUITVIEW_TRAIT_POLES[trait]
+    label = pole["high_label" if level == "HIGH" else "low_label"]
+    descriptor = pole["high_descriptor" if level == "HIGH" else "low_descriptor"]
+    suffix = f" — {descriptor}" if variant == "full" else ""
+    return (
+        f"Interview question: {question}\n\n"
+        f"Answer this question in 60–100 words as someone who is "
+        f"{label}{suffix}."
+    )
+
+
+# ---------------------------------------------------------------------------
+# RECRUITVIEW — Style A (full multi-trait paired, HIGH/MID/LOW)
+# ---------------------------------------------------------------------------
+
+# Natural-language fragments for each (trait, discretized-level) combination
+# in the Style A multi-trait prompt. Built once at import time.
+_A_RV_FRAGMENTS: dict[str, dict[str, str]] = {}
+for _t in config.RECRUITVIEW_TRAIT_COLS:
+    _pole = RECRUITVIEW_TRAIT_POLES[_t]
+    _A_RV_FRAGMENTS[_t] = {
+        "HIGH": f"high on {_t} ({_pole['high_descriptor']})",
+        "LOW":  f"low on {_t} ({_pole['low_descriptor']})",
+        "MID":  f"around average on {_t}",
+    }
+del _t, _pole
+
+
+def discretize_z(z: float, threshold: float = 0.5) -> LevelA:
+    """Map a z-score to HIGH (z > +thr), LOW (z < -thr), or MID."""
+    if z > threshold:
+        return "HIGH"
+    if z < -threshold:
+        return "LOW"
+    return "MID"
+
+
+def style_a_recruitview_prompt(
+    levels: dict[str, LevelA], question: str,
+) -> str:
+    """Build the Style A user prompt from a discretized 5-trait profile.
+
+    `levels` must map every `config.RECRUITVIEW_TRAIT_COLS` key to one of
+    "HIGH", "MID", "LOW".
+    """
+    missing = set(config.RECRUITVIEW_TRAIT_COLS) - levels.keys()
+    if missing:
+        raise ValueError(f"Profile missing traits: {missing}")
+    parts: list[str] = []
+    for t in config.RECRUITVIEW_TRAIT_COLS:
+        lvl = levels[t]
+        if lvl not in ("HIGH", "MID", "LOW"):
+            raise ValueError(
+                f"Trait {t} level must be HIGH/MID/LOW; got {lvl!r}."
+            )
+        parts.append(_A_RV_FRAGMENTS[t][lvl])
+    trait_str = "; ".join(parts[:-1]) + "; and " + parts[-1]
+    question = question.strip().rstrip("?") + "?"
+    return (
+        f"Interview question: {question}\n\n"
+        f"Answer this question in 60–100 words as someone who is "
+        f"{trait_str}."
+    )
+
+
+# ---------------------------------------------------------------------------
 # OpenAI Chat Completions payload helper
 # ---------------------------------------------------------------------------
 
-def build_messages(user_prompt: str) -> list[dict[str, str]]:
-    """Return the `messages=` array for the OpenAI Chat Completions API."""
+def build_messages(
+    user_prompt: str, dataset: str = "essays",
+) -> list[dict[str, str]]:
+    """Return the `messages=` array for the OpenAI Chat Completions API.
+
+    `dataset` selects the system message: "essays" for the Pennebaker
+    free-writing register, "recruitview" for the short interview-answer
+    register.
+    """
+    if dataset == "essays":
+        system = SYSTEM_PROMPT
+    elif dataset == "recruitview":
+        system = SYSTEM_PROMPT_RECRUITVIEW
+    else:
+        raise ValueError(
+            f"Unknown dataset {dataset!r}; expected 'essays' or 'recruitview'."
+        )
     return [
-        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "system", "content": system},
         {"role": "user", "content": user_prompt},
     ]
 
@@ -153,28 +310,70 @@ def build_messages(user_prompt: str) -> list[dict[str, str]]:
 # CLI: dump example prompts for inspection
 # ---------------------------------------------------------------------------
 
+_EXAMPLE_RV_QUESTION = (
+    "Tell me about a time you had to work with a teammate whose approach "
+    "to a project differed sharply from your own. How did you handle it?"
+)
+
+
 def _dump_examples() -> None:
     print("=" * 70)
-    print("SYSTEM MESSAGE")
+    print("ESSAYS — SYSTEM MESSAGE")
     print("=" * 70)
     print(SYSTEM_PROMPT)
     print()
 
-    print("=" * 70)
-    print("STYLE D — single-trait isolated (5 traits × 3 levels)")
-    print("=" * 70)
-    for trait in config.TRAIT_COLS:
-        for level in LEVELS:
-            print(f"\n--- {trait} ({config.TRAIT_NAMES[trait]}) / {level} ---")
-            print(style_d_user_prompt(trait, level))
+    for variant in PROMPT_VARIANTS:
+        print("=" * 70)
+        print(f"ESSAYS — STYLE D / variant={variant!r} (5 traits × 3 levels)")
+        print("=" * 70)
+        for trait in config.TRAIT_COLS:
+            for level in LEVELS:
+                print(f"\n--- {trait} ({config.TRAIT_NAMES[trait]}) / {level} ---")
+                print(style_d_user_prompt(trait, level, variant=variant))
 
     print()
     print("=" * 70)
-    print("STYLE A — full multi-trait paired (example profile)")
+    print("ESSAYS — STYLE A (example profile)")
     print("=" * 70)
     profile = {"cEXT": 1, "cNEU": 0, "cAGR": 1, "cCON": 1, "cOPN": 0}
     print(f"\nprofile = {profile}")
     print(style_a_user_prompt(profile))
+
+    print()
+    print("=" * 70)
+    print("RECRUITVIEW — SYSTEM MESSAGE")
+    print("=" * 70)
+    print(SYSTEM_PROMPT_RECRUITVIEW)
+    print()
+
+    for variant in PROMPT_VARIANTS:
+        print("=" * 70)
+        print(
+            f"RECRUITVIEW — STYLE D / variant={variant!r} (5 traits × 3 levels)"
+        )
+        print("=" * 70)
+        print(f"interview question: {_EXAMPLE_RV_QUESTION}")
+        for trait in config.RECRUITVIEW_TRAIT_COLS:
+            for level in LEVELS:
+                print(f"\n--- {trait} / {level} ---")
+                print(style_d_recruitview_prompt(
+                    trait, level, _EXAMPLE_RV_QUESTION, variant=variant,
+                ))
+
+    print()
+    print("=" * 70)
+    print("RECRUITVIEW — STYLE A (example discretized profile)")
+    print("=" * 70)
+    rv_levels: dict[str, LevelA] = {
+        "openness":          "HIGH",
+        "conscientiousness": "MID",
+        "extraversion":      "HIGH",
+        "agreeableness":     "LOW",
+        "neuroticism":       "LOW",
+    }
+    print(f"\nlevels = {rv_levels}")
+    print(style_a_recruitview_prompt(rv_levels, _EXAMPLE_RV_QUESTION))
 
 
 if __name__ == "__main__":

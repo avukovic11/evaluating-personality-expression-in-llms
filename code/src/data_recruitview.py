@@ -20,6 +20,7 @@ Run from `code/`:
 from __future__ import annotations
 
 import argparse
+import re
 from pathlib import Path
 
 import numpy as np
@@ -34,6 +35,19 @@ _KEEP_COLS = [
     "id", "question_id", "question", "user_no", "transcript",
     *config.RECRUITVIEW_TRAIT_COLS,
 ]
+
+# Whisper segment timestamps look like `[00:00 - 00:06]`; they carry no
+# personality signal and waste tokens. Also collapse paragraph breaks (one
+# segment per line) into single-space-separated spoken text.
+_TIMESTAMP_RE = re.compile(r"\[\d{1,2}:\d{2}\s*-+\s*\d{1,2}:\d{2}\]\s*")
+_WHITESPACE_RE = re.compile(r"\s+")
+
+
+def _clean_transcript(text: str) -> str:
+    """Strip Whisper segment markers and collapse whitespace."""
+    text = _TIMESTAMP_RE.sub("", text)
+    text = _WHITESPACE_RE.sub(" ", text)
+    return text.strip()
 
 
 _VIDEO_AUDIO_IGNORE = [
@@ -96,7 +110,7 @@ def load_recruitview(min_words: int = DEFAULT_MIN_WORDS) -> pd.DataFrame:
         )
 
     df = df[_KEEP_COLS].copy()
-    df["transcript"] = df["transcript"].astype(str).str.strip()
+    df["transcript"] = df["transcript"].astype(str).map(_clean_transcript)
     df["user_no"] = df["user_no"].astype(str)
 
     word_counts = df["transcript"].str.split().str.len()
