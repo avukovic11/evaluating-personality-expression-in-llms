@@ -22,8 +22,8 @@ Unska 3, 10000 Zagreb, Croatia\\
 }
 
 \abstract{
-Large language models are increasingly used to produce text on behalf of users or synthetic personas, yet it is unclear whether they can faithfully express personality expression in unconstrained writing.
-We address this on the Pennebaker \& King stream-of-consciousness Essays dataset by training a multi-label RoBERTa probe to score trait expression in text, generating essays with GPT-4o-mini under single-trait (Style~B) and full-profile (Style~A) prompting, and comparing predicted trait distributions and per-essay alignment against human baselines.
+Large language models are increasingly used to produce text on behalf of users or synthetic personas, yet it is unclear whether they can faithfully express personality in unconstrained writing.
+On the Pennebaker \& King stream-of-consciousness Essays dataset---where human OCEAN profiles (Openness, Conscientiousness, Extraversion, Agreeableness, Neuroticism) were established with standard psychological tests---we train a multi-label RoBERTa probe to score trait expression in text, generate essays with GPT-4o-mini under single-trait (Style~B) and full-profile (Style~A) prompting, and compare predicted OCEAN distributions and per-essay alignment against human baselines.
 We further analyse linguistic cues via LIWC-style features.
 This paper describes the end-to-end system: data preparation, probe training, async LLM generation, distributional evaluation, and qualitative error analysis.
 }
@@ -176,6 +176,8 @@ Conclusion is the last enumerated section of the paper. It should not exceed hal
 \section*{Acknowledgements}
 
 If suitable, you can include the \textit{Acknowledgements} section before inserting the literature references  in order to thank those who helped you in any way to deliver the paper, but are not co-authors of the paper.
+
+\nocite{kerz-etal-2022-pushing,zhang-etal-2023-psyattention,yang-etal-2023-psycot,v-ganesan-etal-2023-systematic}
 
 \bibliographystyle{tar2023}
 \bibliography{tar2023}
