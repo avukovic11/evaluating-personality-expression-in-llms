@@ -9,9 +9,9 @@ Research question: **can LLMs faithfully generate stream-of-consciousness text t
 Pipeline:
 1. Train a multi-label binary classifier (RoBERTa-base and/or ModernBERT-base) on the Pennebaker & King 1999 Essays dataset to predict Big Five. This is our **probe** — not ground truth, just a calibrated text-personality scorer.
 2. Use GPT-4o-mini to generate essays in two regimes:
-   - **Style D** — single-trait isolated prompts (HIGH / LOW / NEUTRAL × 5 traits × 100 = 1500 essays). Clean causal design.
+   - **Style B** — single-trait isolated prompts (HIGH / LOW / NEUTRAL × 5 traits × 100 = 1500 essays). Clean causal design.
    - **Style A** — full multi-trait paired prompts (~500, sampled from human profiles). Realistic multi-trait control.
-3. Run the trained probe on the LLM essays. For Style D, compare predicted-probability distributions (humans vs LLM-NEUTRAL vs LLM-HIGH vs LLM-LOW) per trait — Wasserstein-1 distances + bootstrap CIs + KDE plots. For Style A, per-essay alignment metrics.
+3. Run the trained probe on the LLM essays. For Style B, compare predicted-probability distributions (humans vs LLM-NEUTRAL vs LLM-HIGH vs LLM-LOW) per trait — Wasserstein-1 distances + bootstrap CIs + KDE plots. For Style A, per-essay alignment metrics.
 5. SHAP + LIWC linguistic analysis to compare what cues the probe latches onto in human vs LLM essays.
 
 Paper: ACL-style system description, 8–9 sections, target submission **May 31, 2026**.
@@ -28,7 +28,7 @@ Paper: ACL-style system description, 8–9 sections, target submission **May 31,
 │   │   │   ├── roberta-base_seed42/              # local-only; unzip from Colab
 │   │   │   └── ModernBERT-base_seed42/           # local-only; unzip from Colab
 │   │   ├── llm_generated/
-│   │   │   ├── style_d_single_trait.jsonl        # dry-run: 15 essays (1/trait/level)
+│   │   │   ├── style_b_single_trait.jsonl        # dry-run: 15 essays (1/trait/level)
 │   │   │   └── style_a_paired.jsonl              # dry-run: 5 essays
 │   │   └── results/
 │   │       ├── dummy/, tfidf-lr/, liwc-lr/       # baseline metrics + per-essay test predictions
@@ -39,9 +39,9 @@ Paper: ACL-style system description, 8–9 sections, target submission **May 31,
 │   │   ├── data.py                               # load essays.csv; produce stratified splits
 │   │   ├── baselines.py                          # dummy / TF-IDF+LR / LIWC-style+LR
 │   │   ├── classifier.py                         # RoBERTa/ModernBERT trainer + --predict-* CLI
-│   │   ├── prompts.py                            # Style D + Style A prompt templates
+│   │   ├── prompts.py                            # Style B + Style A prompt templates
 │   │   ├── generate.py                           # async OpenAI generation with resume + cost guard
-│   │   ├── evaluate.py                           # Style D distributional + Style A paired alignment
+│   │   ├── evaluate.py                           # Style B distributional + Style A paired alignment
 │   │   └── analyze.py                            # LIWC stats + Style A error dumps + optional SHAP
 │   └── notebooks/
 │       └── essays.ipynb                          # Colab orchestration: clone, train, push results
@@ -150,13 +150,13 @@ Then on your local machine, unzip into `code/datasets/checkpoints/roberta-base_s
 
 Dry runs (cheap, ~$0.02 total):
 ```bash
-python -m src.generate --style D --n-per-condition 1    # 15 essays
+python -m src.generate --style B --n-per-condition 1    # 15 essays
 python -m src.generate --style A --n-paired 5           # 5 essays
 ```
 
 Full runs (~$1.50 total, ~30 min wall clock with concurrency=8):
 ```bash
-python -m src.generate --style D                        # 1500 essays
+python -m src.generate --style B                        # 1500 essays
 python -m src.generate --style A                        # 500 essays
 ```
 
@@ -171,17 +171,17 @@ Output JSONL fields (one per essay): `essay_id, prompt_style, prompted_trait, pr
 
 ### 5. Evaluate (`src/evaluate.py`) — dry-run outputs in repo
 
-Requires a probe checkpoint (see step 3). For Style D, also needs the human-test predictions CSV (from step 3) to anchor the distributional comparison:
+Requires a probe checkpoint (see step 3). For Style B, also needs the human-test predictions CSV (from step 3) to anchor the distributional comparison:
 ```bash
-python -m src.evaluate --style D                                              # uses roberta-base by default
+python -m src.evaluate --style B                                              # uses roberta-base by default
 python -m src.evaluate --style A
-python -m src.evaluate --style D --model answerdotai/ModernBERT-base          # use ModernBERT probe instead
+python -m src.evaluate --style B --model answerdotai/ModernBERT-base          # use ModernBERT probe instead
 ```
 
-Outputs in `datasets/results/llm-alignment/style_{d,a}/<model_slug>/`:
-- `metrics.json` — Wasserstein distances + bootstrap CIs (Style D) or per-trait MAE/AUC/acc (Style A)
+Outputs in `datasets/results/llm-alignment/style_{b,a}/<model_slug>/`:
+- `metrics.json` — Wasserstein distances + bootstrap CIs (Style B) or per-trait MAE/AUC/acc (Style A)
 - `scored_essays.csv` / `predictions.csv` — probabilities per essay (so you can re-analyze without re-running probe inference)
-- Style D only: `density_<trait>.png` (KDE plots) and `contamination.png` (5×5 heatmap)
+- Style B only: `density_<trait>.png` (KDE plots) and `contamination.png` (5×5 heatmap)
 
 ### 6. Analyze (`src/analyze.py`) — LIWC + errors in repo; SHAP pending
 
@@ -208,15 +208,15 @@ Outputs in `datasets/results/llm-alignment/analysis/<model_slug>/`:
 - ✅ All three baselines (Dummy / TF-IDF+LR / LIWC-style+LR) — committed results
 - ✅ RoBERTa-base classifier (seed 42, macro-acc 0.585, macro-AUC 0.630) — committed results
 - ✅ ModernBERT-base classifier (seed 42) — committed results
-- ✅ Prompt templates (Style D + Style A) + smoke-dumped to verify
+- ✅ Prompt templates (Style B + Style A) + smoke-dumped to verify
 - ✅ Generation pipeline (async, atomic writes, idempotent resume, cost guard)
-- ✅ Dry runs: 15 Style D + 5 Style A essays — committed
+- ✅ Dry runs: 15 Style B + 5 Style A essays — committed
 - ✅ Evaluation pipeline (distributional + paired) — dry-run outputs committed
 - ✅ Linguistic analysis pipeline (LIWC + errors; SHAP opt-in) — dry-run outputs committed
 
 ## What's left
 
-- ⏳ **Full LLM generation** — `python -m src.generate --style D` and `python -m src.generate --style A`. Total ~$1.50, ~30 min on a reasonable connection. Run from any machine with the API key set; no GPU needed.
+- ⏳ **Full LLM generation** — `python -m src.generate --style B` and `python -m src.generate --style A`. Total ~$1.50, ~30 min on a reasonable connection. Run from any machine with the API key set; no GPU needed.
 - ⏳ **Full evaluation pass** — re-run `src.evaluate` and `src.analyze` after the full generation. No code changes; just rerun. Use `--shap` for the linguistic analysis (do this on Colab GPU; ~30 min).
 - ⏳ **Pick the probe encoder** — compare RoBERTa vs ModernBERT on per-trait AUC; use the stronger one (or both) for the LLM-essay evaluation. See `datasets/results/{roberta-base,ModernBERT-base}/metrics.json`.
 - ⏳ **Paper draft** — 8–9 section ACL-style writeup. Target structure documented in the plan.

@@ -1,7 +1,7 @@
 """Prompt templates for the LLM generation phase.
 
 Two styles, each instantiated per dataset:
-  - **Style D** (single-trait isolated, primary): for each trait T and each level
+  - **Style B** (single-trait isolated, primary): for each trait T and each level
     {HIGH, LOW, NEUTRAL}, build a prompt that conditions on T alone. NEUTRAL
     omits trait language entirely; HIGH/LOW name the trait pole and follow with
     a short descriptor list. Within each trait the HIGH/LOW descriptors are kept
@@ -17,7 +17,7 @@ Each dataset has its own system message and length target:
 The trait descriptors themselves (TRAIT_POLES) are personality properties and
 shared across datasets, keyed by full lowercase trait name.
 
-Style D prompts come in two variants:
+Style B prompts come in two variants:
   - "full"        → "as someone who is highly extraverted — outgoing,
                      energetic, and socially engaged" (default)
   - "label-only"  → "as someone who is highly extraverted"
@@ -45,7 +45,12 @@ SYSTEM_PROMPT = (
     "Let topics jump abruptly. "
     "Short sentences, run-ons, and casual punctuation are fine; you're typing, "
     "not writing literature. Avoid scene-setting openers like 'the sun streams "
-    "through the window' and avoid literary metaphors. Write in first person. "
+    "through the window' and avoid literary metaphors. "
+    "Vary your opening every time. Do NOT start with waking up, sitting at a desk, "
+    "a coffee shop, campus noise, or 'I don't know what to write'. "
+    "Good openings: mid-thought ('okay so'), a random object nearby, a time stamp, "
+    "a half-finished complaint, or jumping straight into a specific memory. "
+    "Write in first person. "
     "No headings, no newlines, no commentary on personality, just plain text. Aim for 650–700 words."
 
 )
@@ -58,7 +63,7 @@ SYSTEM_PROMPT_RECRUITVIEW = (
 )
 
 # ---------------------------------------------------------------------------
-# Per-trait labels and descriptors for Style D HIGH/LOW
+# Per-trait labels and descriptors for Style B HIGH/LOW
 # ---------------------------------------------------------------------------
 
 # Single source of truth, keyed by full lowercase trait name. Used by both
@@ -116,7 +121,7 @@ LEVELS: tuple[Level, ...] = ("HIGH", "LOW", "NEUTRAL")
 LevelA = Literal["HIGH", "MID", "LOW"]
 LEVELS_A_RECRUITVIEW: tuple[LevelA, ...] = ("HIGH", "MID", "LOW")
 
-# Style D descriptor variants:
+# Style B descriptor variants:
 #   "full"        — "as someone who is highly extraverted — outgoing, energetic,
 #                    and socially engaged." Lexically primes the LLM with words
 #                    the probe was trained to detect.
@@ -129,13 +134,13 @@ PROMPT_VARIANTS: tuple[PromptVariant, ...] = ("full", "label-only")
 
 
 # ---------------------------------------------------------------------------
-# Style D — single-trait isolated
+# Style B — single-trait isolated
 # ---------------------------------------------------------------------------
 
-def style_d_user_prompt(
+def style_b_user_prompt(
     trait: str, level: Level, variant: PromptVariant = "full",
 ) -> str:
-    """Build the Style D user prompt for (trait, level).
+    """Build the Style B user prompt for (trait, level).
 
     NEUTRAL omits trait language entirely so that all 5 traits' NEUTRAL prompts
     are identical — they give a single baseline distribution for GPT-4o-mini's
@@ -192,14 +197,14 @@ def style_a_user_prompt(profile: dict[str, int]) -> str:
 
 
 # ---------------------------------------------------------------------------
-# RECRUITVIEW — Style D (single-trait isolated, interview-answer register)
+# RECRUITVIEW — Style B (single-trait isolated, interview-answer register)
 # ---------------------------------------------------------------------------
 
-def style_d_recruitview_prompt(
+def style_b_recruitview_prompt(
     trait: str, level: Level, question: str,
     variant: PromptVariant = "full",
 ) -> str:
-    """Build the Style D user prompt for a RECRUITVIEW interview answer.
+    """Build the Style B user prompt for a RECRUITVIEW interview answer.
 
     The interview question is included verbatim so the model has something
     concrete to answer; the trait conditioning is layered on top. NEUTRAL
@@ -236,7 +241,7 @@ def style_d_recruitview_prompt(
 
 # Natural-language fragments for each (trait, discretized-level) combination
 # in the Style A multi-trait prompt. Two variant tables, parallel to the
-# Style D `variant` parameter: "full" includes the LIWC-style descriptor in
+# Style B `variant` parameter: "full" includes the LIWC-style descriptor in
 # parens; "label-only" drops it.
 _A_RV_FRAGMENTS_FULL: dict[str, dict[str, str]] = {}
 _A_RV_FRAGMENTS_LABEL_ONLY: dict[str, dict[str, str]] = {}
@@ -345,12 +350,12 @@ def _dump_examples() -> None:
 
     for variant in PROMPT_VARIANTS:
         print("=" * 70)
-        print(f"ESSAYS — STYLE D / variant={variant!r} (5 traits × 3 levels)")
+        print(f"ESSAYS — STYLE B / variant={variant!r} (5 traits × 3 levels)")
         print("=" * 70)
         for trait in config.TRAIT_COLS:
             for level in LEVELS:
                 print(f"\n--- {trait} ({config.TRAIT_NAMES[trait]}) / {level} ---")
-                print(style_d_user_prompt(trait, level, variant=variant))
+                print(style_b_user_prompt(trait, level, variant=variant))
 
     print()
     print("=" * 70)
@@ -370,14 +375,14 @@ def _dump_examples() -> None:
     for variant in PROMPT_VARIANTS:
         print("=" * 70)
         print(
-            f"RECRUITVIEW — STYLE D / variant={variant!r} (5 traits × 3 levels)"
+            f"RECRUITVIEW — STYLE B / variant={variant!r} (5 traits × 3 levels)"
         )
         print("=" * 70)
         print(f"interview question: {_EXAMPLE_RV_QUESTION}")
         for trait in config.RECRUITVIEW_TRAIT_COLS:
             for level in LEVELS:
                 print(f"\n--- {trait} / {level} ---")
-                print(style_d_recruitview_prompt(
+                print(style_b_recruitview_prompt(
                     trait, level, _EXAMPLE_RV_QUESTION, variant=variant,
                 ))
 
@@ -393,7 +398,7 @@ def _dump_examples() -> None:
         print("=" * 70)
         print(f"RECRUITVIEW — STYLE A / variant={variant!r}")
         print("=" * 70)
-        print(f"levels = {rv_levels}")
+        print(f"interview question: {_EXAMPLE_RV_QUESTION}")
         print(style_a_recruitview_prompt(
             rv_levels, _EXAMPLE_RV_QUESTION, variant=variant,
         ))

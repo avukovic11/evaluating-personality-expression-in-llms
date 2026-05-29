@@ -8,8 +8,8 @@ error dumps); SHAP is opt-in via `--shap` because it's slow.
    per-essay LIWC features (reusing `liwc_features` from src.baselines) on
    three conditions:
      - humans-test
-     - Style-D HIGH-on-T
-     - Style-D LOW-on-T
+     - Style-B HIGH-on-T
+     - Style-B LOW-on-T
    Report mean ± std per condition, Mann–Whitney U p-values, and Cliff's δ
    effect size for three pairwise comparisons: HIGH vs LOW, humans vs HIGH,
    humans vs LOW.
@@ -20,7 +20,7 @@ error dumps); SHAP is opt-in via `--shap` because it's slow.
      - RecruitView → top |predicted_z − intended_z| residuals per trait.
 
 3. **SHAP token attribution** (`--shap`; slow): for each trait T, sample N
-   essays per condition (humans / D-HIGH / D-LOW), compute token-level SHAP
+   essays per condition (humans / B-HIGH / B-LOW), compute token-level SHAP
    over the probe's prediction for T, and aggregate top-K tokens by mean
    |SHAP value|. Output side-by-side per-trait CSV. Probe output is sigmoid
    prob for essays, raw z-score for recruitview.
@@ -82,8 +82,8 @@ def _llm_align_root(dataset: str) -> Path:
 
 def _style_jsonl_name(dataset: str, style: str) -> str:
     if dataset == "essays":
-        return "style_d_single_trait.jsonl" if style == "D" else "style_a_paired.jsonl"
-    return "style_d_recruitview.jsonl" if style == "D" else "style_a_recruitview.jsonl"
+        return "style_b_single_trait.jsonl" if style == "B" else "style_a_paired.jsonl"
+    return "style_b_recruitview.jsonl" if style == "B" else "style_a_recruitview.jsonl"
 
 
 def _human_texts(dataset: str) -> list[str]:
@@ -142,14 +142,14 @@ def _extract_features(texts: list[str], desc: str) -> pd.DataFrame:
 
 
 def run_liwc_comparison(
-    style_d_records: list[dict], human_texts: list[str], out_dir: Path,
+    style_b_records: list[dict], human_texts: list[str], out_dir: Path,
     dataset: str = "essays",
 ) -> None:
     print(f"\n=== LIWC feature comparison ({dataset}) ===")
     _ensure_nltk()
 
     trait_cols = _trait_cols(dataset)
-    df_d = pd.DataFrame(style_d_records)
+    df_b = pd.DataFrame(style_b_records)
     print(f"Humans (test): {len(human_texts)} texts")
     feat_humans = _extract_features(human_texts, "LIWC humans")
 
@@ -157,7 +157,7 @@ def run_liwc_comparison(
     stats_rows: list[dict] = []
 
     for trait in trait_cols:
-        sub = df_d[df_d["prompted_trait"] == trait]
+        sub = df_b[df_b["prompted_trait"] == trait]
         high_texts = sub.loc[sub["prompted_level"] == "HIGH", "generated_text"].tolist()
         low_texts = sub.loc[sub["prompted_level"] == "LOW", "generated_text"].tolist()
         if not high_texts or not low_texts:
@@ -357,7 +357,7 @@ def run_error_dumps_recruitview(
 # ---------------------------------------------------------------------------
 
 def run_shap(
-    style_d_records: list[dict], human_texts: list[str], model_slug: str,
+    style_b_records: list[dict], human_texts: list[str], model_slug: str,
     n_shap: int, top_k: int, out_dir: Path, dataset: str = "essays",
 ) -> None:
     print(f"\n=== SHAP token attribution ({dataset}, n_shap={n_shap} per condition) ===")
@@ -380,7 +380,7 @@ def run_shap(
     model.to(device).eval()
 
     trait_cols = _trait_cols(dataset)
-    df_d = pd.DataFrame(style_d_records)
+    df_b = pd.DataFrame(style_b_records)
     masker = shap.maskers.Text(tokenizer)
 
     rng = np.random.default_rng(config.SEED)
@@ -393,7 +393,7 @@ def run_shap(
     apply_sigmoid = (dataset == "essays")
 
     for trait_idx, trait in enumerate(trait_cols):
-        sub = df_d[df_d["prompted_trait"] == trait]
+        sub = df_b[df_b["prompted_trait"] == trait]
         high_texts = sub.loc[sub["prompted_level"] == "HIGH", "generated_text"].tolist()[:n_shap]
         low_texts = sub.loc[sub["prompted_level"] == "LOW", "generated_text"].tolist()[:n_shap]
         if not high_texts or not low_texts:
@@ -483,10 +483,10 @@ def main() -> None:
     model_slug = args.model.split("/")[-1]
 
     llm_dir = _llm_outputs_dir(args.dataset)
-    style_d_path = llm_dir / _style_jsonl_name(args.dataset, "D")
-    style_d_records = load_jsonl(style_d_path)
+    style_b_path = llm_dir / _style_jsonl_name(args.dataset, "B")
+    style_b_records = load_jsonl(style_b_path)
     print(f"dataset : {args.dataset}")
-    print(f"Style D : {len(style_d_records)} essays from {style_d_path}")
+    print(f"Style B : {len(style_b_records)} essays from {style_b_path}")
 
     style_a_path = llm_dir / _style_jsonl_name(args.dataset, "A")
     style_a_records = load_jsonl(style_a_path) if style_a_path.exists() else []
@@ -503,7 +503,7 @@ def main() -> None:
 
     if not args.skip_liwc:
         run_liwc_comparison(
-            style_d_records, human_texts, out_dir, dataset=args.dataset,
+            style_b_records, human_texts, out_dir, dataset=args.dataset,
         )
 
     if not args.skip_errors:
@@ -523,7 +523,7 @@ def main() -> None:
 
     if args.shap:
         run_shap(
-            style_d_records, human_texts, model_slug,
+            style_b_records, human_texts, model_slug,
             args.n_shap, args.top_k, out_dir, dataset=args.dataset,
         )
 
