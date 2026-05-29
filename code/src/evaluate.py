@@ -3,9 +3,9 @@
 Two analyses, one per prompt style, applied independently to each dataset
 (`--dataset essays` or `--dataset recruitview`):
 
-**Style D — single-trait isolated.**
+**Style B — single-trait isolated.**
 For each trait T:
-  - Build probe-output distributions on Style-D essays where the prompted trait
+  - Build probe-output distributions on Style-B essays where the prompted trait
     was T: LLM-HIGH, LLM-LOW. Plus the LLM-NEUTRAL pool (all NEUTRAL essays
     share an identical prompt; we pool across traits for more samples) and the
     human-test distribution (read from the trained classifier's saved preds).
@@ -34,9 +34,9 @@ Outputs go to:
   recruitview → `code/datasets/results/llm-alignment/recruitview/<style>/<model_slug>/`
 
 Run from `code/`:
-    python -m src.evaluate --style D
+    python -m src.evaluate --style B
     python -m src.evaluate --style A --model answerdotai/ModernBERT-base
-    python -m src.evaluate --dataset recruitview --style D
+    python -m src.evaluate --dataset recruitview --style B
     python -m src.evaluate --dataset recruitview --style A
 """
 
@@ -98,8 +98,8 @@ def _llm_align_root(dataset: str) -> Path:
 
 def _style_jsonl_name(dataset: str, style: str) -> str:
     if dataset == "essays":
-        return "style_d_single_trait.jsonl" if style == "D" else "style_a_paired.jsonl"
-    return "style_d_recruitview.jsonl" if style == "D" else "style_a_recruitview.jsonl"
+        return "style_b_single_trait.jsonl" if style == "B" else "style_a_paired.jsonl"
+    return "style_b_recruitview.jsonl" if style == "B" else "style_a_recruitview.jsonl"
 
 
 # ---------------------------------------------------------------------------
@@ -206,10 +206,10 @@ def bootstrap_w1(
 
 
 # ---------------------------------------------------------------------------
-# Style D
+# Style B
 # ---------------------------------------------------------------------------
 
-def evaluate_style_d(
+def evaluate_style_b(
     records: list[dict], probs: np.ndarray, human_df: pd.DataFrame,
     out_dir: Path, n_resamples: int, dataset: str = "essays",
 ) -> dict:
@@ -281,7 +281,7 @@ def evaluate_style_d(
     ]
     df[keep_cols].to_csv(out_dir / "scored_essays.csv", index=False)
 
-    _print_style_d_summary(metrics, n_neutral_total, dataset)
+    _print_style_b_summary(metrics, n_neutral_total, dataset)
     return metrics
 
 
@@ -323,7 +323,7 @@ def _plot_kde_for_trait(
     ax.set_xlabel(xlabel)
     ax.set_ylabel("density")
     ax.set_title(
-        f"{trait} ({_trait_display(dataset, trait)}) — Style D distributions"
+        f"{trait} ({_trait_display(dataset, trait)}) — Style B distributions"
     )
     ax.legend(loc="best", fontsize=8)
     fig.tight_layout()
@@ -349,18 +349,18 @@ def _plot_contamination(
     )
     ax.set_xlabel("Scored trait")
     ax.set_ylabel("Prompted trait")
-    ax.set_title("Cross-trait contamination (Style D)")
+    ax.set_title("Cross-trait contamination (Style B)")
     fig.tight_layout()
     fig.savefig(out_dir / "contamination.png", dpi=120)
     plt.close(fig)
 
 
-def _print_style_d_summary(
+def _print_style_b_summary(
     metrics: dict, n_neutral_total: int, dataset: str = "essays",
 ) -> None:
     item_label = "essays" if dataset == "essays" else "answers"
     width = 6 if dataset == "essays" else 18
-    print(f"\n=== Style D ({dataset}) — {metrics['n_total']} {item_label} "
+    print(f"\n=== Style B ({dataset}) — {metrics['n_total']} {item_label} "
           f"({n_neutral_total} NEUTRAL pooled) ===")
     print(f"  {'trait':<{width}} {'n_hi':>4} {'n_lo':>4}  "
           f"{'W1(H,L)':>10} {'W1(N,H)':>10} {'W1(N,L)':>10} {'W1(hum,N)':>10}")
@@ -612,7 +612,7 @@ def main() -> None:
         "--dataset", choices=["essays", "recruitview"], default="essays",
         help="Which dataset's probe + LLM essays to evaluate.",
     )
-    parser.add_argument("--style", choices=["D", "A"], required=True)
+    parser.add_argument("--style", choices=["B", "A"], required=True)
     parser.add_argument(
         "--model", type=str, default=config.CLASSIFIER_MODEL,
         help=(
@@ -635,7 +635,7 @@ def main() -> None:
     config.ensure_dirs()
     model_slug = args.model.split("/")[-1]
 
-    style_subdir = "style_d" if args.style == "D" else "style_a"
+    style_subdir = "style_b" if args.style == "B" else "style_a"
     jsonl = _llm_outputs_dir(args.dataset) / _style_jsonl_name(args.dataset, args.style)
     out_dir = _llm_align_root(args.dataset) / style_subdir / model_slug
 
@@ -646,7 +646,7 @@ def main() -> None:
     print(f"output  : {out_dir}")
 
     # Warn on tiny samples
-    if args.style == "D":
+    if args.style == "B":
         n_per = max(1, len(records) // 15)  # 5 traits × 3 levels = 15 conditions
         if n_per < 10:
             print(
@@ -666,9 +666,9 @@ def main() -> None:
         texts, model_slug, batch_size=args.batch_size, dataset=args.dataset,
     )
 
-    if args.style == "D":
+    if args.style == "B":
         human_df = load_human_test_probs(model_slug, dataset=args.dataset)
-        evaluate_style_d(
+        evaluate_style_b(
             records, probs, human_df, out_dir, args.bootstrap,
             dataset=args.dataset,
         )

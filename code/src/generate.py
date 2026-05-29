@@ -1,6 +1,6 @@
-"""Async OpenAI generation pipeline for Style D and Style A essays.
+"""Async OpenAI generation pipeline for Style B and Style A essays.
 
-For each planned essay (style × trait × level × i for D, or style × paired
+For each planned essay (style × trait × level × i for B, or style × paired
 profile for A), this script:
 
   1. Skips it if already present in the output JSONL (idempotent resume).
@@ -23,17 +23,17 @@ Run from `code/`:
 
     # ---- TRACK 1 (essays) ----
     # Dry run — 1 per (trait × HIGH|LOW) + 1 NEUTRAL = 11 essays
-    python -m src.generate --style D --n-per-trait-level 1 --n-neutral 1
+    python -m src.generate --style B --n-per-trait-level 1 --n-neutral 1
     # Full run — default 125 per (trait × HIGH|LOW) + 250 NEUTRAL = 1500 total
-    python -m src.generate --style D
+    python -m src.generate --style B
     python -m src.generate --style A                 # 500 paired essays
 
     # ---- TRACK 2 (recruitview) ----
-    python -m src.generate --dataset recruitview --style D \
+    python -m src.generate --dataset recruitview --style B \
         --n-per-trait-level 1 --n-neutral 1                     # dry run, 11 answers
     python -m src.generate --dataset recruitview --style A \
         --n-synthetic-users 3                                   # dry run, ~18 answers
-    python -m src.generate --dataset recruitview --style D      # 1500 short answers
+    python -m src.generate --dataset recruitview --style B      # 1500 short answers
     python -m src.generate --dataset recruitview --style A      # ~600 answers, 100 users
     # Full-coverage Style A — sample all 230 train users:
     python -m src.generate --dataset recruitview --style A --n-synthetic-users 230
@@ -41,11 +41,11 @@ Run from `code/`:
     # ---- MULTI-RUN ----
     # Easiest: just add --append on every re-run. New essays get a timestamp
     # tag so they always land alongside previous ones without skipping.
-    python -m src.generate --dataset recruitview --style D --append
-    python -m src.generate --dataset recruitview --style D --append --seed 43
+    python -m src.generate --dataset recruitview --style B --append
+    python -m src.generate --dataset recruitview --style B --append --seed 43
 
     # Or pick your own tags manually:
-    python -m src.generate --dataset recruitview --style D --run-tag run2 --seed 43
+    python -m src.generate --dataset recruitview --style B --run-tag run2 --seed 43
 
     # ---- USEFUL FLAGS ----
     --model gpt-4o-mini       # default
@@ -96,8 +96,8 @@ from .prompts import (
     discretize_z,
     style_a_recruitview_prompt,
     style_a_user_prompt,
-    style_d_recruitview_prompt,
-    style_d_user_prompt,
+    style_b_recruitview_prompt,
+    style_b_user_prompt,
 )
 
 # OpenAI USD pricing per 1M tokens (rough current snapshot — update if the
@@ -122,11 +122,11 @@ def _tag_suffix(run_tag: str) -> str:
     return f"_{run_tag}" if run_tag else ""
 
 
-def style_d_plan(
+def style_b_plan(
     n_per_trait_level: int, n_neutral: int,
     run_tag: str = "", variant: PromptVariant = "full",
 ) -> list[dict[str, Any]]:
-    """Build the essays Style D plan.
+    """Build the essays Style B plan.
 
     - `n_per_trait_level` essays per (trait × HIGH|LOW): 5 × 2 × n total.
     - `n_neutral` essays in a single shared NEUTRAL pool (no per-trait
@@ -140,27 +140,27 @@ def style_d_plan(
         for level in ("HIGH", "LOW"):
             for i in range(n_per_trait_level):
                 plans.append({
-                    "essay_id": f"D_{trait}_{level}_{i:03d}{suffix}",
+                    "essay_id": f"B_{trait}_{level}_{i:03d}{suffix}",
                     "dataset": "essays",
-                    "prompt_style": "D",
+                    "prompt_style": "B",
                     "prompt_variant": variant,
                     "prompted_trait": trait,
                     "prompted_level": level,
                     "intended_profile": None,
-                    "user_prompt": style_d_user_prompt(trait, level, variant),
+                    "user_prompt": style_b_user_prompt(trait, level, variant),
                 })
     if n_neutral > 0:
         # NEUTRAL has no trait language to strip, so the variant is moot —
         # but we still record it so a label-only NEUTRAL pool can be pooled
         # with a label-only HIGH/LOW pool by downstream tooling if desired.
-        neutral_prompt = style_d_user_prompt(
+        neutral_prompt = style_b_user_prompt(
             config.TRAIT_COLS[0], "NEUTRAL", variant,
         )
         for i in range(n_neutral):
             plans.append({
-                "essay_id": f"D_NEUTRAL_{i:03d}{suffix}",
+                "essay_id": f"B_NEUTRAL_{i:03d}{suffix}",
                 "dataset": "essays",
-                "prompt_style": "D",
+                "prompt_style": "B",
                 "prompt_variant": variant,
                 "prompted_trait": None,
                 "prompted_level": "NEUTRAL",
@@ -204,11 +204,11 @@ def _load_recruitview_train_df():
     return load_recruitview_splits(df)["train"]
 
 
-def style_d_recruitview_plan(
+def style_b_recruitview_plan(
     n_per_trait_level: int, n_neutral: int, seed: int,
     run_tag: str = "", variant: PromptVariant = "full",
 ) -> list[dict[str, Any]]:
-    """Build the RecruitView Style D plan.
+    """Build the RecruitView Style B plan.
 
     - `n_per_trait_level` answers per (trait × HIGH|LOW), each with a
       fresh question sampled from the train-split question pool.
@@ -234,15 +234,15 @@ def style_d_recruitview_plan(
                 qrow = question_pool.iloc[q_idx]
                 question = str(qrow["question"])
                 plans.append({
-                    "essay_id":             f"D_rv_{trait}_{level}_{i:03d}{suffix}",
+                    "essay_id":             f"B_rv_{trait}_{level}_{i:03d}{suffix}",
                     "dataset":              "recruitview",
-                    "prompt_style":         "D",
+                    "prompt_style":         "B",
                     "prompt_variant":       variant,
                     "prompted_trait":       trait,
                     "prompted_level":       level,
                     "prompted_question_id": int(qrow["question_id"]),
                     "prompted_question":    question,
-                    "user_prompt":          style_d_recruitview_prompt(
+                    "user_prompt":          style_b_recruitview_prompt(
                         trait, level, question, variant,
                     ),
                 })
@@ -252,15 +252,15 @@ def style_d_recruitview_plan(
         qrow = question_pool.iloc[q_idx]
         question = str(qrow["question"])
         plans.append({
-            "essay_id":             f"D_rv_NEUTRAL_{i:03d}{suffix}",
+            "essay_id":             f"B_rv_NEUTRAL_{i:03d}{suffix}",
             "dataset":              "recruitview",
-            "prompt_style":         "D",
+            "prompt_style":         "B",
             "prompt_variant":       variant,
             "prompted_trait":       None,
             "prompted_level":       "NEUTRAL",
             "prompted_question_id": int(qrow["question_id"]),
             "prompted_question":    question,
-            "user_prompt":          style_d_recruitview_prompt(
+            "user_prompt":          style_b_recruitview_prompt(
                 config.RECRUITVIEW_TRAIT_COLS[0], "NEUTRAL", question, variant,
             ),
         })
@@ -523,8 +523,8 @@ def main() -> None:
         help="Which dataset's prompt register + output path to use.",
     )
     parser.add_argument(
-        "--style", choices=["D", "A"], required=True,
-        help="D = single-trait isolated; A = full multi-trait paired.",
+        "--style", choices=["B", "A"], required=True,
+        help="B = single-trait isolated; A = full multi-trait paired.",
     )
     parser.add_argument(
         "--model", type=str, default=config.GEN_MODEL,
@@ -533,14 +533,14 @@ def main() -> None:
     parser.add_argument(
         "--n-per-trait-level", type=int, default=125,
         help=(
-            "Style D: essays per (trait × HIGH|LOW). "
+            "Style B: essays per (trait × HIGH|LOW). "
             "Default 125 → 5 traits × 2 levels × 125 = 1250 HIGH+LOW total."
         ),
     )
     parser.add_argument(
         "--n-neutral", type=int, default=250,
         help=(
-            "Style D: essays in the shared NEUTRAL pool (not per-trait, since "
+            "Style B: essays in the shared NEUTRAL pool (not per-trait, since "
             "the NEUTRAL prompt is identical across traits). Default 250 → "
             "5:1 HIGH+LOW:NEUTRAL ratio, total 1500 with the default split."
         ),
@@ -581,7 +581,7 @@ def main() -> None:
     parser.add_argument(
         "--prompt-variant", choices=list(PROMPT_VARIANTS), default="full",
         help=(
-            "Style D descriptor handling. 'full' keeps the LIWC-style word "
+            "Style B descriptor handling. 'full' keeps the LIWC-style word "
             "list after the trait label (default, existing behaviour); "
             "'label-only' drops it. Compare the two to disentangle lexical "
             "instruction-following from genuine style steering."
@@ -608,7 +608,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--seed", type=int, default=config.SEED,
-        help="Seed for plan sampling (Style A profile sample; Style D RV question sample).",
+        help="Seed for plan sampling (Style A profile sample; Style B RV question sample).",
     )
     args = parser.parse_args()
 
@@ -644,7 +644,7 @@ def main() -> None:
             file=sys.stderr,
         )
 
-    def _d_summary(n_per_tl: int, n_neut: int) -> str:
+    def _b_summary(n_per_tl: int, n_neut: int) -> str:
         return (
             f"({n_per_tl} per (trait × HIGH|LOW) × 5 × 2 = "
             f"{5 * 2 * n_per_tl}, + {n_neut} NEUTRAL pool"
@@ -658,15 +658,15 @@ def main() -> None:
     )
     if args.dataset == "essays":
         out_dir = config.LLM_OUTPUTS_DIR
-        if args.style == "D":
-            plans = style_d_plan(
+        if args.style == "B":
+            plans = style_b_plan(
                 args.n_per_trait_level, args.n_neutral,
                 args.run_tag, args.prompt_variant,
             )
-            out_path = out_dir / "style_d_single_trait.jsonl"
+            out_path = out_dir / "style_b_single_trait.jsonl"
             label = (
-                f"Essays · Style D — {len(plans)} essays "
-                + _d_summary(args.n_per_trait_level, args.n_neutral)
+                f"Essays · Style B — {len(plans)} essays "
+                + _b_summary(args.n_per_trait_level, args.n_neutral)
                 + variant_tag
             )
         else:
@@ -678,15 +678,15 @@ def main() -> None:
             )
     else:  # recruitview
         out_dir = config.LLM_OUTPUTS_RV_DIR
-        if args.style == "D":
-            plans = style_d_recruitview_plan(
+        if args.style == "B":
+            plans = style_b_recruitview_plan(
                 args.n_per_trait_level, args.n_neutral,
                 args.seed, args.run_tag, args.prompt_variant,
             )
-            out_path = out_dir / "style_d_recruitview.jsonl"
+            out_path = out_dir / "style_b_recruitview.jsonl"
             label = (
-                f"RecruitView · Style D — {len(plans)} answers "
-                + _d_summary(args.n_per_trait_level, args.n_neutral)
+                f"RecruitView · Style B — {len(plans)} answers "
+                + _b_summary(args.n_per_trait_level, args.n_neutral)
                 + variant_tag
             )
         else:
