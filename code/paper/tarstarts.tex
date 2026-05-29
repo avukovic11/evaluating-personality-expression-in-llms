@@ -1,5 +1,4 @@
-% Paper template for TAR 2022
-% (C) 2014 Jan Šnajder, Goran Glavaš, Domagoj Alagić, Mladen Karan
+% TAR 2025/26 system description paper — team TARstars
 % TakeLab, FER
 
 \documentclass[10pt, a4paper]{article}
@@ -12,19 +11,21 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 
-\title{TAR System Description Paper Template}
+\title{Evaluating Personality Expression in Large Language Models}
 
-\name{Author1, Author2, Author3} 
+\name{Author1, Author2, Author3}
 
 \address{
 University of Zagreb, Faculty of Electrical Engineering and Computing\\
-Unska 3, 10000 Zagreb, Croatia\\ 
+Unska 3, 10000 Zagreb, Croatia\\
 \texttt{autor1@xxx.hr}, \texttt{\{autor2,autor3\}@zz.com}\\
 }
-          
-         
-\abstract{ 
-This document provides the instructions on formatting the TAR system description paper in \LaTeX{}. This is where you write the abstract (i.e., summary) of the work you carried out within the project. The abstract is a paragraph of text ranging between 70 and 150 words.
+
+\abstract{
+Large language models are increasingly used to produce text on behalf of users or synthetic personas, yet it is unclear whether they can faithfully express personality expression in unconstrained writing.
+We address this on the Pennebaker \& King stream-of-consciousness Essays dataset by training a multi-label RoBERTa probe to score trait expression in text, generating essays with GPT-4o-mini under single-trait (Style~B) and full-profile (Style~A) prompting, and comparing predicted trait distributions and per-essay alignment against human baselines.
+We further analyse linguistic cues via LIWC-style features.
+This paper describes the end-to-end system: data preparation, probe training, async LLM generation, distributional evaluation, and qualitative error analysis.
 }
 
 \begin{document}
@@ -33,9 +34,11 @@ This document provides the instructions on formatting the TAR system description
 
 \section{Introduction}
 
-This section is the introduction to your paper. Introduction should not be too elaborate, as that is what other sections are for (the Introduction should definitely not spill over to the second page). 
-
-This is the second paragraph of the introduction. In \LaTeX , paragraphs are separated by inserting an empty line in between them.  Avoid very large paragraphs (larger than half of the page height), but also avoid tiny paragraphs (e.g., one-sentence paragraphs).
+Large language models can produce fluent stream-of-consciousness text, but it remains unclear whether they can reliably adopt a requested personality the way people do when they write freely.
+In this work we ask a concrete version of that question: if we instruct GPT-4o-mini to write as someone who is, for example, highly extraverted or very anxious, does the resulting essay look---to an automatic personality scorer trained on human writing---like a human essay with that trait, or does the model only mimic obvious wording from the prompt?
+We study this on the Pennebaker \& King Essays dataset, where students wrote unstructured essays and received binary Big Five labels, and we train RoBERTa-base as a multi-label \emph{probe} that predicts those five traits from text; the probe is our measurement instrument, not a claim about ground-truth personality.
+We then generate new essays in two regimes---Style~B varies a single trait at a time (\textsc{high}, \textsc{low}, or no trait instruction) to test whether steering one dimension works in isolation, while Style~A copies full five-trait profiles from real human annotators to test more realistic multi-trait control---and for every generated essay we run the probe and compare its outputs to the personality we asked for and to the distribution of scores on held-out human essays, using distributional distances and density plots for Style~B, per-essay agreement for Style~A, and LIWC-style linguistic analysis to inspect which cues differ between human and LLM text.
+This paper describes that end-to-end pipeline---data preparation, probe training, LLM generation, evaluation, and error analysis---and reports how faithfully explicit personality instructions translate into detectable stylistic shifts.
 
 \section{Second section}
 
@@ -50,9 +53,9 @@ This is a subsection of the second section.
 
 This is the second subsection of the second section. Referencing the (sub)sections in text is performed as follows: ``in Section~\ref{sec:first} we have shown \dots''.
 
-\subsubsection{Sub-subsection example} 
+\subsubsection{Sub-subsection example}
 
-This is a sub-subsection. If possible, it is better to avoid sub-subsections. 
+This is a sub-subsection. If possible, it is better to avoid sub-subsections.
 
 \section{Extent of the paper}
 
@@ -62,7 +65,7 @@ The paper should have a minimum of 3 and a maximum of 4 pages, plus an additiona
 
 \subsection{Figures}
 
-Here is an example on how to include figures in the paper. Figures are included in \LaTeX{} code immediately \textit{after} the text in which these figures are referenced. Allow \LaTeX{} to place the figure where it believes is best (usually on top of the page of at the position where you would not place the figure). Figures are referenced as follows: ``Figure~\ref{fig:figure1} shows \dots''. Use tilde (\verb.~.) to prevent separation between the word ``Figure'' and its enumeration. 
+Here is an example on how to include figures in the paper. Figures are included in \LaTeX{} code immediately \textit{after} the text in which these figures are referenced. Allow \LaTeX{} to place the figure where it believes is best (usually on top of the page of at the position where you would not place the figure). Figures are referenced as follows: ``Figure~\ref{fig:figure1} shows \dots''. Use tilde (\verb.~.) to prevent separation between the word ``Figure'' and its enumeration.
 
 \begin{figure}
 \begin{center}
@@ -99,7 +102,7 @@ Three   & Third row text \\
 
 \subsection{Wide tables}
 
-Table~\ref{tab:wide-table} is an example of a wide table that spreads across both columns. The same can be done for wide figures that should spread across the whole width of the page. 
+Table~\ref{tab:wide-table} is an example of a wide table that spreads across both columns. The same can be done for wide figures that should spread across the whole width of the page.
 
 \begin{table*}
 \caption{Wide-table caption}
@@ -123,7 +126,7 @@ Math expressions and formulas that appear within the sentence should be written 
 
 \[
 b^{(i)}_k = \begin{cases}
-1 & \text{if 
+1 & \text{if
     $k = \text{argmin}_j \| \mathbf{x}^{(i)} - \mathbf{\mu}_j \|,$}\\
 0 & \text{otherwise}
 \end{cases}
@@ -132,7 +135,7 @@ b^{(i)}_k = \begin{cases}
 Math expressions which you reference in the text should be written inside the \textit{equation} environment:
 
 \begin{equation}\label{eq:kmeans-error}
-J = \sum_{i=1}^N \sum_{k=1}^K 
+J = \sum_{i=1}^N \sum_{k=1}^K
 b^{(i)}_k \| \mathbf{x}^{(i)} - \mathbf{\mu}_k \|^2
 \end{equation}
 
@@ -142,7 +145,7 @@ Now you can reference equation \eqref{eq:kmeans-error}. If the paragraph continu
 f(x) = x^2 + \varepsilon
 \end{equation}
 
-\noindent like this one does, use the command \emph{noindent} after the equation to remove the indentation of the row. 
+\noindent like this one does, use the command \emph{noindent} after the equation to remove the indentation of the row.
 
 Multi-letter words in the math environment should be written inside the command \emph{mathit}, otherwise \LaTeX{} will insert spacing between the letters to denote the multiplication of values denoted by symbols. For example, compare
 $\mathit{Consistent}(h,\mathcal{D})$ and\\
@@ -158,11 +161,11 @@ References to other publications should be written in brackets with the last nam
 If the publication is authored by more than one author, only the name of the first author is written, after which abbreviation \emph{et al.}, meaning \emph{et alia}, i.e.,~and others is written as in \citep{johnson-etc}. If the publication is authored by only two authors, then the last names of both authors are written \citep{johnson-howells}.
 
 If the name of the author is incorporated into the text of the sentence, it should not be in the brackets (only the year should be there). E.g.,~``\citet{chomsky-73}
-suggested that \dots''. The difference is whether you reference the publication or the author who wrote it. 
+suggested that \dots''. The difference is whether you reference the publication or the author who wrote it.
 
 The list of all literature references is given alphabetically at the end of the paper. The form of the reference depends on the type of the bibliographic unit: conference papers,
 \citep{chave-64}, books \citep{butcher-81}, journal articles
-\citep{howells-51}, doctoral dissertations \citep{croft-78}, and book chapters \citep{feigl-58}. 
+\citep{howells-51}, doctoral dissertations \citep{croft-78}, and book chapters \citep{feigl-58}.
 
 All of this is automatically produced when using BibTeX. Insert all the BibTeX entries into the file \texttt{tar2023.bib}, and then reference them via their symbolic names.
 
@@ -175,7 +178,6 @@ Conclusion is the last enumerated section of the paper. It should not exceed hal
 If suitable, you can include the \textit{Acknowledgements} section before inserting the literature references  in order to thank those who helped you in any way to deliver the paper, but are not co-authors of the paper.
 
 \bibliographystyle{tar2023}
-\bibliography{tar2023} 
+\bibliography{tar2023}
 
 \end{document}
-
