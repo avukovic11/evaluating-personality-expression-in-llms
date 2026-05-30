@@ -199,6 +199,7 @@ def fit_one_seed(
     task: str,
     trait_cols: list[str],
     dataset_slug: str,
+    slug_override: str | None = None,
 ) -> tuple[np.ndarray, np.ndarray | None]:
     """Train one model.
 
@@ -224,7 +225,11 @@ def fit_one_seed(
         problem_type=problem_type,
     )
 
-    model_slug = model_name.split("/")[-1]
+    # Use slug_override when the caller has already applied a custom suffix
+    # (e.g. `_seq1500` for a non-default max sequence length). Otherwise
+    # fall back to the base HF model name. The override path is critical:
+    # without it, the checkpoint would overwrite the default 512-token one.
+    model_slug = slug_override or model_name.split("/")[-1]
     out_dir = config.CHECKPOINTS_DIR / _ckpt_dir_name(model_slug, dataset_slug, seed)
 
     if task == "classification":
@@ -542,7 +547,7 @@ def main() -> None:
             seed, train_ds, val_ds, test_ds, val_y, tokenizer,
             epochs=args.epochs, batch_size=args.batch_size, lr=args.lr,
             model_name=args.model, task=task, trait_cols=trait_cols,
-            dataset_slug=dataset_slug,
+            dataset_slug=dataset_slug, slug_override=model_slug,
         )
         all_outputs.append(outputs)
 
