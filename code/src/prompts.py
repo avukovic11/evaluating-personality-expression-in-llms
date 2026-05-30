@@ -154,9 +154,9 @@ def style_b_user_prompt(
             "Write a 650–700 word stream-of-consciousness essay about whatever "
             "comes to mind."
         )
-    if trait not in TRAIT_POLES:
+    if trait not in config.TRAIT_POLES:
         raise ValueError(
-            f"Unknown trait {trait!r}; expected one of {list(TRAIT_POLES)}."
+            f"Unknown trait {trait!r}; expected one of {list(config.TRAIT_POLES)}."
         )
     pole = TRAIT_POLES[trait]
     label = pole["high_label" if level == "HIGH" else "low_label"]

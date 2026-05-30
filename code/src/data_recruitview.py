@@ -69,11 +69,20 @@ def load_recruitview(min_words: int = DEFAULT_MIN_WORDS) -> pd.DataFrame:
     """
     from huggingface_hub import snapshot_download
 
-    local_dir = snapshot_download(
-        repo_id=DATASET_ID,
-        repo_type="dataset",
-        ignore_patterns=_VIDEO_AUDIO_IGNORE,
-    )
+    try:
+        local_dir = snapshot_download(
+            repo_id=DATASET_ID,
+            repo_type="dataset",
+            ignore_patterns=_VIDEO_AUDIO_IGNORE,
+        )
+    except Exception:
+        # Fall back to cached copy if HF is unreachable or token is missing.
+        local_dir = snapshot_download(
+            repo_id=DATASET_ID,
+            repo_type="dataset",
+            ignore_patterns=_VIDEO_AUDIO_IGNORE,
+            local_files_only=True,
+        )
     local = Path(local_dir)
 
     # Find metadata files (parquet preferred; fall back to csv/jsonl/json).

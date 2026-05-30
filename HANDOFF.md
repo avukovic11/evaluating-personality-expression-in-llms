@@ -198,6 +198,58 @@ Outputs in `datasets/results/llm-alignment/analysis/<model_slug>/`:
 - `errors_per_trait/<trait>.txt` — Style A misalignments per trait
 - `shap_<trait>.csv` (with `--shap`) — top-K tokens per (trait, condition)
 
+## Key results (full run, 2026-05-29)
+
+### Essays — Style B: W1 HIGH↔LOW (larger = LLM steered the trait further)
+
+| Trait | RoBERTa | ModernBERT |
+|---|---|---|
+| cOPN | **0.303** | 0.213 |
+| cNEU | 0.196 | **0.432** |
+| cAGR | 0.197 | **0.382** |
+| cCON | 0.107 | 0.077 |
+| cEXT | 0.114 | 0.172 |
+
+- **Openness** most steerable by RoBERTa (W1=0.303, HIGH mean prob=0.853).
+- **Neuroticism and Agreeableness** much more separated under ModernBERT (W1≈0.43/0.38 vs 0.20).
+- **Conscientiousness** weakest on both — LOW essays still score high; GPT's default writing is already conscientious-sounding.
+- GPT NEUTRAL writing scores higher than human baseline on cCON and cAGR (GPT default style = polished + agreeable).
+- Contamination: prompting HIGH-NEU strongly suppresses probe's cOPN score (−0.192 in RoBERTa heatmap) — the two traits are linguistically entangled.
+
+### Essays — Style A: macro alignment (n=500 multi-trait essays)
+
+| Metric | RoBERTa | ModernBERT |
+|---|---|---|
+| AUC | **0.819** | 0.774 |
+| Accuracy | **0.646** | 0.644 |
+| Profile exact match | 0.15 | — |
+
+Per-trait AUC (RoBERTa): cNEU 0.871, cOPN 0.851, cAGR 0.810, cEXT 0.806, cCON 0.755.
+**RoBERTa is the stronger primary probe for essays.**
+
+### RecruitView — Style B: W1 HIGH↔LOW
+
+| Trait | RoBERTa | ModernBERT |
+|---|---|---|
+| openness | 0.070 | 0.061 |
+| conscientiousness | 0.058 | **0.140** |
+| extraversion | 0.030 | 0.077 |
+| agreeableness | 0.047 | 0.060 |
+| neuroticism | 0.010 | 0.049 |
+
+W1 values are 3–10× smaller than essays. GPT barely separates HIGH from LOW as seen by either probe. All GPT-generated interview answers cluster at **negative z-scores** (e.g., openness HIGH=−0.53, LOW=−0.46) while human test mean ≈ +0.07 — severe domain gap.
+
+### RecruitView — Style A: macro Spearman
+
+| | RoBERTa | ModernBERT |
+|---|---|---|
+| per-essay | −0.216 | −0.157 |
+| per-user | −0.480 | −0.392 |
+
+**Negative correlations on both probes** — not a probe artefact. GPT's uniformly polished answers look like low-trait text to both models. See gotcha #9 for paper framing.
+
+---
+
 ## What's done
 
 - ✅ Data pipeline + splits (essays + recruitview)
@@ -210,8 +262,8 @@ Outputs in `datasets/results/llm-alignment/analysis/<model_slug>/`:
 - ✅ **Full LLM generation (essays)**: 1522 Style B + 500 Style A — committed
 - ✅ **Full LLM generation (recruitview)**: 3700 Style B + 1395 Style A — committed
 - ✅ All 4 checkpoints unzipped locally (required to run evaluate + analyze)
-- ✅ Evaluation pipeline (distributional + paired, both tracks) — dry-run outputs committed; **full rerun in progress**
-- ✅ Linguistic analysis pipeline (LIWC + errors + optional SHAP, both tracks) — dry-run outputs committed; **full rerun needed after evaluate finishes**
+- ✅ **Full evaluation pass (both probes, both tracks)** — results committed; see Key Results section above
+- ✅ Linguistic analysis pipeline (LIWC + errors + optional SHAP, both tracks) — dry-run outputs committed; **full rerun still needed**
 
 ## What's left
 

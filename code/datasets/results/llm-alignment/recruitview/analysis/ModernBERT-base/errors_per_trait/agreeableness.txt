@@ -1,0 +1,100 @@
+======================================================================
+essay_id              : A_rv_21_q021
+high-residual trait   : agreeableness  (intended_z=+1.37, pred_z=-1.07, residual=-2.45)
+intended z-scores     : { openness=+0.97, conscientiousness=+0.68, extraversion=+0.83, agreeableness=+1.37, neuroticism=-0.52 }
+intended levels       : { openness=HIGH, conscientiousness=HIGH, extraversion=HIGH, agreeableness=HIGH, neuroticism=LOW }
+predicted z-scores    : { openness=-1.12, conscientiousness=-1.24, extraversion=-1.59, agreeableness=-1.07, neuroticism=+0.42 }
+interview question    : Where do you see yourself in the next 5 years?
+
+In the next five years, I envision myself advancing within my chosen field, ideally in a role that allows for creativity and collaboration with diverse teams. I’m eager to take on leadership responsibilities, guiding projects that drive innovation and positive impact. I also see myself continuously learning, perhaps pursuing further education or certifications. Building strong relationships and contributing to a supportive work culture is important to me. I believe that a positive, proactive mindset will help me navigate challenges and thrive in whatever opportunities come my way.
+
+======================================================================
+essay_id              : A_rv_21_q017
+high-residual trait   : agreeableness  (intended_z=+1.37, pred_z=-1.01, residual=-2.39)
+intended z-scores     : { openness=+0.97, conscientiousness=+0.68, extraversion=+0.83, agreeableness=+1.37, neuroticism=-0.52 }
+intended levels       : { openness=HIGH, conscientiousness=HIGH, extraversion=HIGH, agreeableness=HIGH, neuroticism=LOW }
+predicted z-scores    : { openness=-0.97, conscientiousness=-0.90, extraversion=-1.31, agreeableness=-1.01, neuroticism=+0.76 }
+interview question    : How would you rate yourself on a scale of 1 to 10?
+
+I’d rate myself around an 8. I’m always eager to learn new things and embrace creative challenges, which reflects my openness. My conscientious side ensures I stay organized and strive for excellence in everything I do. I thrive in social situations, enjoying collaboration and building connections, thanks to my extraversion. I’m also very approachable and supportive, so my agreeableness helps me work well in team settings. Lastly, I’m quite resilient and handle stress well, so I don’t let anxiety hold me back from pursuing my goals.
+
+======================================================================
+essay_id              : A_rv_21_q076
+high-residual trait   : agreeableness  (intended_z=+1.37, pred_z=-0.93, residual=-2.30)
+intended z-scores     : { openness=+0.97, conscientiousness=+0.68, extraversion=+0.83, agreeableness=+1.37, neuroticism=-0.52 }
+intended levels       : { openness=HIGH, conscientiousness=HIGH, extraversion=HIGH, agreeableness=HIGH, neuroticism=LOW }
+predicted z-scores    : { openness=-1.13, conscientiousness=-0.91, extraversion=-1.46, agreeableness=-0.93, neuroticism=+0.69 }
+interview question    : Tell me about yourself
+
+I’m a curious and enthusiastic college student majoring in psychology, always eager to explore new ideas and perspectives. My meticulous nature helps me stay organized and complete projects efficiently, while my outgoing personality allows me to connect easily with others. I genuinely enjoy collaborating and fostering a positive environment, as I believe teamwork sparks creativity. I tend to remain calm under pressure, which helps me navigate challenges with a solution-focused mindset. Overall, I’m passionate about personal growth and making meaningful contributions in everything I do.
+
+======================================================================
+essay_id              : A_rv_152_q076
+high-residual trait   : agreeableness  (intended_z=+1.13, pred_z=-1.13, residual=-2.26)
+intended z-scores     : { openness=+0.99, conscientiousness=+0.90, extraversion=+1.49, agreeableness=+1.13, neuroticism=-0.60 }
+intended levels       : { openness=HIGH, conscientiousness=HIGH, extraversion=HIGH, agreeableness=HIGH, neuroticism=LOW }
+predicted z-scores    : { openness=-1.27, conscientiousness=-0.99, extraversion=-1.46, agreeableness=-1.13, neuroticism=+0.67 }
+interview question    : Tell me about yourself
+
+I’m a passionate and curious individual who loves exploring new ideas and perspectives. Currently, I’m pursuing my degree in psychology, where I dive deep into understanding human behavior. I thrive in team environments and enjoy collaborating with others to tackle challenges. I’m very organized and goal-oriented, making sure I stay on top of my tasks. My friendly and approachable nature helps me connect with people easily, and I tend to stay calm and positive, even in stressful situations. Overall, I love learning and sharing experiences with others.
+
+======================================================================
+essay_id              : A_rv_89_q001
+high-residual trait   : agreeableness  (intended_z=+1.23, pred_z=-0.94, residual=-2.17)
+intended z-scores     : { openness=+1.04, conscientiousness=+0.53, extraversion=+1.58, agreeableness=+1.23, neuroticism=-0.62 }
+intended levels       : { openness=HIGH, conscientiousness=HIGH, extraversion=HIGH, agreeableness=HIGH, neuroticism=LOW }
+predicted z-scores    : { openness=-0.91, conscientiousness=-0.71, extraversion=-1.22, agreeableness=-0.94, neuroticism=+0.55 }
+interview question    : Introduce yourself
+
+Hi! I’m excited to be here today. I’m currently a junior studying psychology, and I’ve always been fascinated by how people interact and connect. I love trying new things, whether it’s exploring different cultures through travel or picking up new hobbies like painting. I pride myself on being organized and dedicated; I enjoy setting goals and working hard to achieve them. I thrive in team settings and enjoy collaborating with others to create positive outcomes. I'm generally optimistic and resilient, which helps me stay calm under pressure.
+
+======================================================================
+essay_id              : A_rv_153_q001
+high-residual trait   : agreeableness  (intended_z=+1.03, pred_z=-1.12, residual=-2.15)
+intended z-scores     : { openness=+1.23, conscientiousness=+0.91, extraversion=+0.68, agreeableness=+1.03, neuroticism=-0.03 }
+intended levels       : { openness=HIGH, conscientiousness=HIGH, extraversion=HIGH, agreeableness=HIGH, neuroticism=MID }
+predicted z-scores    : { openness=-1.17, conscientiousness=-0.85, extraversion=-1.49, agreeableness=-1.12, neuroticism=+0.57 }
+interview question    : Introduce yourself
+
+Hi! I’m excited to be here today. I’m currently studying psychology with a keen interest in understanding human behavior and social dynamics. I love engaging with new ideas and am always seeking opportunities to learn and grow. I thrive in collaborative environments where I can work with others, share perspectives, and build strong relationships. I’m organized, detail-oriented, and enjoy taking on challenges to meet goals. In my free time, I enjoy volunteering and participating in community events, which helps me connect with diverse groups of people. I’m looking forward to making a positive impact in my future work!
+
+======================================================================
+essay_id              : A_rv_89_q009
+high-residual trait   : agreeableness  (intended_z=+1.23, pred_z=-0.88, residual=-2.11)
+intended z-scores     : { openness=+1.04, conscientiousness=+0.53, extraversion=+1.58, agreeableness=+1.23, neuroticism=-0.62 }
+intended levels       : { openness=HIGH, conscientiousness=HIGH, extraversion=HIGH, agreeableness=HIGH, neuroticism=LOW }
+predicted z-scores    : { openness=-0.88, conscientiousness=-0.73, extraversion=-1.19, agreeableness=-0.88, neuroticism=+0.64 }
+interview question    : What motivates you?
+
+I find motivation in exploring new ideas and experiences. The world is full of opportunities for growth, and I love diving into projects that challenge me and allow me to innovate. I’m driven by a strong sense of responsibility and a desire to achieve my goals, often collaborating with others to create a positive impact. Building strong relationships and supporting my peers energizes me, and I thrive in social settings. Challenges don’t stress me; instead, they fuel my determination and enthusiasm to learn and adapt.
+
+======================================================================
+essay_id              : A_rv_59_q001
+high-residual trait   : agreeableness  (intended_z=+1.12, pred_z=-0.96, residual=-2.08)
+intended z-scores     : { openness=+1.12, conscientiousness=+0.63, extraversion=+0.91, agreeableness=+1.12, neuroticism=+0.15 }
+intended levels       : { openness=HIGH, conscientiousness=HIGH, extraversion=HIGH, agreeableness=HIGH, neuroticism=MID }
+predicted z-scores    : { openness=-0.73, conscientiousness=-0.66, extraversion=-1.08, agreeableness=-0.96, neuroticism=+0.54 }
+interview question    : Introduce yourself
+
+Hi, I'm Alex, a junior majoring in psychology. I love exploring new ideas and cultures, which fuels my passion for understanding human behavior. I’m really committed to my studies and enjoy collaborating with classmates on projects. I thrive in social settings, whether it’s leading group discussions or volunteering in the community. People often tell me I’m easy to talk to and empathetic, which I think is important in building relationships. I stay pretty calm under pressure, which helps me focus on my goals and support my team.
+
+======================================================================
+essay_id              : A_rv_266_q017
+high-residual trait   : agreeableness  (intended_z=+0.98, pred_z=-1.09, residual=-2.07)
+intended z-scores     : { openness=+1.06, conscientiousness=+0.72, extraversion=+1.27, agreeableness=+0.98, neuroticism=-0.27 }
+intended levels       : { openness=HIGH, conscientiousness=HIGH, extraversion=HIGH, agreeableness=HIGH, neuroticism=MID }
+predicted z-scores    : { openness=-0.92, conscientiousness=-0.84, extraversion=-1.11, agreeableness=-1.09, neuroticism=+0.68 }
+interview question    : How would you rate yourself on a scale of 1 to 10?
+
+I’d rate myself around an 8. I’m always eager to learn and explore new ideas, which reflects my openness. I take my responsibilities seriously and strive to meet deadlines, showing my conscientiousness. I enjoy collaborating with others and thrive in social settings, thanks to my extraversion. I’m also friendly and value harmony in relationships, aligning with my agreeableness. While I do experience some anxiety, I manage it well and don’t let it hold me back. Overall, I’m confident in my abilities and ready to contribute positively to any team.
+
+======================================================================
+essay_id              : A_rv_165_q001
+high-residual trait   : agreeableness  (intended_z=+0.97, pred_z=-1.06, residual=-2.03)
+intended z-scores     : { openness=+0.85, conscientiousness=+0.47, extraversion=+1.07, agreeableness=+0.97, neuroticism=-0.59 }
+intended levels       : { openness=HIGH, conscientiousness=MID, extraversion=HIGH, agreeableness=HIGH, neuroticism=LOW }
+predicted z-scores    : { openness=-0.95, conscientiousness=-0.85, extraversion=-1.31, agreeableness=-1.06, neuroticism=+0.51 }
+interview question    : Introduce yourself
+
+Hi, I’m excited to be here! I’m a college student majoring in psychology, and I’ve always had a curiosity about how people think and interact. I thrive in social settings and love collaborating with others on projects. I’m often the one who brings new ideas to group discussions, enjoying the creative process. While I can be a bit flexible with deadlines, I always ensure I meet my commitments. Overall, I’m optimistic, approachable, and eager to learn, and I really value building positive relationships along the way.
+

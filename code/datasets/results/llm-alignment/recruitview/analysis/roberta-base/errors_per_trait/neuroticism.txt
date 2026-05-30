@@ -1,0 +1,100 @@
+======================================================================
+essay_id              : A_rv_104_q036
+high-residual trait   : neuroticism  (intended_z=-0.86, pred_z=+0.20, residual=+1.07)
+intended z-scores     : { openness=+1.09, conscientiousness=+0.76, extraversion=+0.14, agreeableness=+0.55, neuroticism=-0.86 }
+intended levels       : { openness=HIGH, conscientiousness=HIGH, extraversion=MID, agreeableness=HIGH, neuroticism=LOW }
+predicted z-scores    : { openness=-0.66, conscientiousness=-0.59, extraversion=-0.68, agreeableness=-0.58, neuroticism=+0.20 }
+interview question    : Is there anything that makes you different from other candidates?
+
+I believe my unique combination of qualities sets me apart. My high openness means I’m always eager to explore new ideas and approaches, which fosters creativity in problem-solving. Being highly conscientious, I prioritize organization and attention to detail, ensuring that tasks are completed efficiently. I enjoy collaborating with others, thanks to my agreeableness, so I’m focused on building positive relationships in a team. Finally, my low neuroticism helps me stay calm under pressure, allowing me to navigate challenges with a clear mindset. I think these traits can bring a fresh perspective to your team.
+
+======================================================================
+essay_id              : A_rv_104_q034
+high-residual trait   : neuroticism  (intended_z=-0.86, pred_z=+0.19, residual=+1.06)
+intended z-scores     : { openness=+1.09, conscientiousness=+0.76, extraversion=+0.14, agreeableness=+0.55, neuroticism=-0.86 }
+intended levels       : { openness=HIGH, conscientiousness=HIGH, extraversion=MID, agreeableness=HIGH, neuroticism=LOW }
+predicted z-scores    : { openness=-0.51, conscientiousness=-0.46, extraversion=-0.60, agreeableness=-0.42, neuroticism=+0.19 }
+interview question    : Can you give an example of a time when you led by example to promote a positive work culture or values?
+
+Absolutely! During a group project last semester, I noticed some teammates were feeling overwhelmed. I took the initiative to organize our tasks, encouraging open communication and collaboration. By sharing my own struggles and how I managed them, I created a safe space for others to express their concerns. We celebrated small wins along the way, which boosted morale. This approach not only fostered a supportive atmosphere but also enhanced our productivity, ultimately leading us to receive an A on the project. It was rewarding to see everyone feel valued and engaged.
+
+======================================================================
+essay_id              : A_rv_104_q035
+high-residual trait   : neuroticism  (intended_z=-0.86, pred_z=+0.19, residual=+1.05)
+intended z-scores     : { openness=+1.09, conscientiousness=+0.76, extraversion=+0.14, agreeableness=+0.55, neuroticism=-0.86 }
+intended levels       : { openness=HIGH, conscientiousness=HIGH, extraversion=MID, agreeableness=HIGH, neuroticism=LOW }
+predicted z-scores    : { openness=-0.56, conscientiousness=-0.50, extraversion=-0.61, agreeableness=-0.44, neuroticism=+0.19 }
+interview question    : Describe a project where you encouraged open communication and feedback among team members, leading to improved collaboration and outcomes.
+
+In a recent group project for my marketing class, I prioritized open communication by setting up weekly check-ins where everyone could share their ideas and concerns. I encouraged team members to give and receive feedback in a supportive environment. By actively listening and integrating diverse viewpoints, we fostered a sense of collaboration. As a result, we not only enhanced our project outcomes but also strengthened our team dynamics. It was rewarding to see how open dialogue led to innovative solutions and everyone feeling valued in their contributions.
+
+======================================================================
+essay_id              : A_rv_104_q033
+high-residual trait   : neuroticism  (intended_z=-0.86, pred_z=+0.17, residual=+1.04)
+intended z-scores     : { openness=+1.09, conscientiousness=+0.76, extraversion=+0.14, agreeableness=+0.55, neuroticism=-0.86 }
+intended levels       : { openness=HIGH, conscientiousness=HIGH, extraversion=MID, agreeableness=HIGH, neuroticism=LOW }
+predicted z-scores    : { openness=-0.43, conscientiousness=-0.37, extraversion=-0.45, agreeableness=-0.39, neuroticism=+0.17 }
+interview question    : What are your hobbies?
+
+I have a variety of hobbies that reflect my curiosity and motivation. I love painting and exploring different art styles, as it allows me to express my creativity. I also enjoy hiking, as being in nature is refreshing and gives me a chance to unwind. Reading is another passion of mine; I dive into a mix of fiction and non-fiction, which broadens my perspective. I often volunteer at local organizations, as I find fulfillment in helping others and connecting with my community. Overall, my hobbies keep me balanced and engaged with the world around me.
+
+======================================================================
+essay_id              : A_rv_104_q032
+high-residual trait   : neuroticism  (intended_z=-0.86, pred_z=+0.17, residual=+1.03)
+intended z-scores     : { openness=+1.09, conscientiousness=+0.76, extraversion=+0.14, agreeableness=+0.55, neuroticism=-0.86 }
+intended levels       : { openness=HIGH, conscientiousness=HIGH, extraversion=MID, agreeableness=HIGH, neuroticism=LOW }
+predicted z-scores    : { openness=-0.56, conscientiousness=-0.47, extraversion=-0.57, agreeableness=-0.46, neuroticism=+0.17 }
+interview question    : How do you improve your knowledge?
+
+I believe in continuous learning and actively seek out new knowledge through various sources. I enjoy reading books and articles in different fields to expand my understanding. I also participate in discussion groups and workshops, as I appreciate hearing different perspectives and sharing ideas with others. Additionally, I set personal goals for learning, which helps me stay organized and focused. I approach challenges with curiosity and resilience, which keeps me motivated to grow and improve my skills over time.
+
+======================================================================
+essay_id              : A_rv_188_q012
+high-residual trait   : neuroticism  (intended_z=-0.73, pred_z=+0.18, residual=+0.91)
+intended z-scores     : { openness=+0.24, conscientiousness=+0.19, extraversion=+0.35, agreeableness=+0.31, neuroticism=-0.73 }
+intended levels       : { openness=MID, conscientiousness=MID, extraversion=MID, agreeableness=MID, neuroticism=LOW }
+predicted z-scores    : { openness=-0.63, conscientiousness=-0.55, extraversion=-0.69, agreeableness=-0.53, neuroticism=+0.18 }
+interview question    : How do you respond to change?
+
+I tend to approach change with a balanced mindset. While I appreciate familiarity, I understand that change can lead to new opportunities and growth. I usually take a step back to assess the situation and think about how I can adapt effectively. I’m open to discussing the changes with my peers, as collaboration often leads to better solutions. Overall, I try to stay calm and focused, viewing change as a part of life that can sometimes lead to positive outcomes.
+
+======================================================================
+essay_id              : A_rv_188_q013
+high-residual trait   : neuroticism  (intended_z=-0.73, pred_z=+0.17, residual=+0.90)
+intended z-scores     : { openness=+0.24, conscientiousness=+0.19, extraversion=+0.35, agreeableness=+0.31, neuroticism=-0.73 }
+intended levels       : { openness=MID, conscientiousness=MID, extraversion=MID, agreeableness=MID, neuroticism=LOW }
+predicted z-scores    : { openness=-0.55, conscientiousness=-0.51, extraversion=-0.58, agreeableness=-0.51, neuroticism=+0.17 }
+interview question    : What was the toughest decision you ever had to make?
+
+The toughest decision I ever had to make was choosing between two job offers last summer. One was from a well-known company with a stable environment, while the other was a startup with a dynamic culture and a bit more risk. I weighed my options carefully, considering my career goals and personal growth. Ultimately, I chose the startup because I wanted to challenge myself and grow in a fast-paced environment. It was a bit nerve-wracking, but I felt confident in my decision and have really enjoyed the experience.
+
+======================================================================
+essay_id              : A_rv_188_q014
+high-residual trait   : neuroticism  (intended_z=-0.73, pred_z=+0.16, residual=+0.89)
+intended z-scores     : { openness=+0.24, conscientiousness=+0.19, extraversion=+0.35, agreeableness=+0.31, neuroticism=-0.73 }
+intended levels       : { openness=MID, conscientiousness=MID, extraversion=MID, agreeableness=MID, neuroticism=LOW }
+predicted z-scores    : { openness=-0.55, conscientiousness=-0.54, extraversion=-0.63, agreeableness=-0.56, neuroticism=+0.16 }
+interview question    : What is your greatest fear?
+
+My greatest fear would probably be missing out on opportunities due to inaction. I like to take things as they come and weigh my options, but sometimes I worry that if I hesitate too long, I might let a great chance slip by. I prefer to stay calm and not let anxiety control my decisions, but it can be a challenge to balance my desire to be thoughtful with the need to take risks. I think it’s essential to embrace the moment while still being practical about my choices.
+
+======================================================================
+essay_id              : A_rv_184_q016
+high-residual trait   : neuroticism  (intended_z=-0.71, pred_z=+0.18, residual=+0.89)
+intended z-scores     : { openness=+0.64, conscientiousness=+0.44, extraversion=+0.95, agreeableness=+0.88, neuroticism=-0.71 }
+intended levels       : { openness=HIGH, conscientiousness=MID, extraversion=HIGH, agreeableness=HIGH, neuroticism=LOW }
+predicted z-scores    : { openness=-0.43, conscientiousness=-0.38, extraversion=-0.49, agreeableness=-0.37, neuroticism=+0.18 }
+interview question    : Describe a situation where you identified a problem before it became significant. What steps did you take to address it?
+
+In a group project last semester, I noticed early on that communication was lacking, which could have led to misunderstandings. I suggested we hold weekly check-ins to discuss our progress and any concerns. I invited everyone to share their thoughts openly, creating a supportive atmosphere. This proactive approach helped us identify and resolve issues quickly. By fostering collaboration, we ended up with a stronger final presentation, and everyone felt more engaged throughout the process. It was great to see how effective communication can really make a difference!
+
+======================================================================
+essay_id              : A_rv_196_q001
+high-residual trait   : neuroticism  (intended_z=-0.70, pred_z=+0.19, residual=+0.89)
+intended z-scores     : { openness=+0.32, conscientiousness=+0.32, extraversion=+0.45, agreeableness=+0.80, neuroticism=-0.70 }
+intended levels       : { openness=MID, conscientiousness=MID, extraversion=MID, agreeableness=HIGH, neuroticism=LOW }
+predicted z-scores    : { openness=-0.52, conscientiousness=-0.46, extraversion=-0.56, agreeableness=-0.47, neuroticism=+0.19 }
+interview question    : Introduce yourself
+
+Hi, I’m Alex. I’m currently studying psychology and really enjoy exploring how people think and interact. I’d describe myself as friendly and approachable, which helps me connect with others easily. I’m fairly organized and responsible in my work, but I also believe in being adaptable when new challenges arise. I love collaborating with others, whether in group projects or social settings. Outside of school, I enjoy volunteering and community events, which I find really rewarding. I’m excited about the opportunities ahead and eager to make a positive impact.
+

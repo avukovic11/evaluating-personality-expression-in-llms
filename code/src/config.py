@@ -69,6 +69,106 @@ CLASSIFIER_MODEL = "roberta-base"
 MAX_SEQ_LEN = 512
 SEED = 42
 
+# --- Trait pole vocabulary ----------------------------------------------------
+# Single source of truth for the label + descriptor strings used by prompts.py
+# to build Style D prompts. Prompt text must NOT change after dry-run essays
+# are generated without also regenerating those essays.
+TRAIT_POLES: dict[str, dict[str, str]] = {
+    "cEXT": {
+        "high_label": "highly extraverted",
+        "high_descriptor": "outgoing, energetic, and socially engaged",
+        "low_label": "very introverted",
+        "low_descriptor": "reserved, prefers solitude, and finds social situations draining",
+    },
+    "cNEU": {
+        "high_label": "highly neurotic",
+        "high_descriptor": "anxious, easily stressed, and prone to negative emotions",
+        "low_label": "very emotionally stable",
+        "low_descriptor": "calm, even-tempered, and resilient under stress",
+    },
+    "cAGR": {
+        "high_label": "very agreeable",
+        "high_descriptor": "warm, cooperative, and considerate of others",
+        "low_label": "rather disagreeable",
+        "low_descriptor": "competitive, critical, and skeptical of others' motives",
+    },
+    "cCON": {
+        "high_label": "highly conscientious",
+        "high_descriptor": "organized, disciplined, and dependable",
+        "low_label": "very disorganized",
+        "low_descriptor": "spontaneous, careless with plans, and easily distracted",
+    },
+    "cOPN": {
+        "high_label": "highly open to experience",
+        "high_descriptor": "curious, imaginative, and drawn to novelty",
+        "low_label": "very conventional",
+        "low_descriptor": "practical, routine-oriented, and prefers the familiar",
+    },
+}
+
+# --- Trait keyword vocabulary -------------------------------------------------
+# Broader word lists for keyword-density analysis in analyze.py. Intentionally
+# wider than TRAIT_POLES descriptors — the point is to detect trait vocabulary
+# that leaks through beyond what was explicitly prompted.
+# Drawn from TRAIT_POLES core terms plus close morphological variants.
+TRAIT_KEYWORDS: dict[str, dict[str, list[str]]] = {
+    "cEXT": {
+        "high": [
+            "extraverted", "extravert", "outgoing", "energetic", "energy",
+            "social", "sociable", "talkative", "lively", "people", "party",
+            "friends", "engaged", "engaging",
+        ],
+        "low": [
+            "introverted", "introvert", "reserved", "solitude", "alone",
+            "quiet", "withdrawn", "draining", "drained", "isolated", "shy",
+        ],
+    },
+    "cNEU": {
+        "high": [
+            "neurotic", "anxious", "anxiety", "stressed", "stress",
+            "worry", "worried", "worrying", "nervous", "tense", "negative",
+            "overwhelmed", "upset", "fearful", "fear",
+        ],
+        "low": [
+            "stable", "calm", "relaxed", "resilient", "composed",
+            "peaceful", "serene", "balanced", "even", "steady",
+        ],
+    },
+    "cAGR": {
+        "high": [
+            "agreeable", "warm", "cooperative", "considerate", "kind",
+            "friendly", "helpful", "compassionate", "caring", "generous",
+        ],
+        "low": [
+            "disagreeable", "competitive", "critical", "skeptical",
+            "harsh", "argumentative", "cold", "suspicious", "blunt",
+        ],
+    },
+    "cCON": {
+        "high": [
+            "conscientious", "organized", "organisation", "organization",
+            "disciplined", "discipline", "dependable", "responsible",
+            "careful", "thorough", "systematic", "diligent", "planned",
+            "schedule", "goal",
+        ],
+        "low": [
+            "disorganized", "spontaneous", "careless", "distracted",
+            "impulsive", "messy", "forgetful", "haphazard", "scattered",
+        ],
+    },
+    "cOPN": {
+        "high": [
+            "open", "curious", "curiosity", "imaginative", "imagination",
+            "creative", "creativity", "novelty", "novel", "artistic",
+            "intellectual", "adventurous", "inventive",
+        ],
+        "low": [
+            "conventional", "practical", "routine", "familiar",
+            "traditional", "ordinary", "conservative", "predictable",
+        ],
+    },
+}
+
 # --- LLM generation -----------------------------------------------------------
 GEN_MODEL = "gpt-4o-mini"          # primary generator (cheap, ~$2 for full 2467)
 GEN_MODEL_SANITY = "gpt-4o"        # scale-check on a ~200-essay subset

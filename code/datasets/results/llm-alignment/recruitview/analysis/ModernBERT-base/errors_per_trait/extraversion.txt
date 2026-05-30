@@ -1,0 +1,100 @@
+======================================================================
+essay_id              : A_rv_241_q001
+high-residual trait   : extraversion  (intended_z=+1.59, pred_z=-1.54, residual=-3.13)
+intended z-scores     : { openness=+1.13, conscientiousness=+0.69, extraversion=+1.59, agreeableness=+0.59, neuroticism=-0.63 }
+intended levels       : { openness=HIGH, conscientiousness=HIGH, extraversion=HIGH, agreeableness=HIGH, neuroticism=LOW }
+predicted z-scores    : { openness=-1.04, conscientiousness=-0.92, extraversion=-1.54, agreeableness=-1.01, neuroticism=+0.57 }
+interview question    : Introduce yourself
+
+I’m a passionate and curious college student majoring in environmental science. I love exploring new ideas and finding creative solutions to problems. I’m very organized and dedicated to my studies, balancing academic responsibilities with a variety of extracurricular activities. I thrive in social environments, engaging with peers and building connections, which I believe enriches my learning experience. I’m known for my friendly and approachable nature, always eager to help others. I tend to stay calm under pressure, focusing on positive outcomes, which helps me tackle challenges effectively.
+
+======================================================================
+essay_id              : A_rv_152_q076
+high-residual trait   : extraversion  (intended_z=+1.49, pred_z=-1.46, residual=-2.95)
+intended z-scores     : { openness=+0.99, conscientiousness=+0.90, extraversion=+1.49, agreeableness=+1.13, neuroticism=-0.60 }
+intended levels       : { openness=HIGH, conscientiousness=HIGH, extraversion=HIGH, agreeableness=HIGH, neuroticism=LOW }
+predicted z-scores    : { openness=-1.27, conscientiousness=-0.99, extraversion=-1.46, agreeableness=-1.13, neuroticism=+0.67 }
+interview question    : Tell me about yourself
+
+I’m a passionate and curious individual who loves exploring new ideas and perspectives. Currently, I’m pursuing my degree in psychology, where I dive deep into understanding human behavior. I thrive in team environments and enjoy collaborating with others to tackle challenges. I’m very organized and goal-oriented, making sure I stay on top of my tasks. My friendly and approachable nature helps me connect with people easily, and I tend to stay calm and positive, even in stressful situations. Overall, I love learning and sharing experiences with others.
+
+======================================================================
+essay_id              : A_rv_89_q001
+high-residual trait   : extraversion  (intended_z=+1.58, pred_z=-1.22, residual=-2.79)
+intended z-scores     : { openness=+1.04, conscientiousness=+0.53, extraversion=+1.58, agreeableness=+1.23, neuroticism=-0.62 }
+intended levels       : { openness=HIGH, conscientiousness=HIGH, extraversion=HIGH, agreeableness=HIGH, neuroticism=LOW }
+predicted z-scores    : { openness=-0.91, conscientiousness=-0.71, extraversion=-1.22, agreeableness=-0.94, neuroticism=+0.55 }
+interview question    : Introduce yourself
+
+Hi! I’m excited to be here today. I’m currently a junior studying psychology, and I’ve always been fascinated by how people interact and connect. I love trying new things, whether it’s exploring different cultures through travel or picking up new hobbies like painting. I pride myself on being organized and dedicated; I enjoy setting goals and working hard to achieve them. I thrive in team settings and enjoy collaborating with others to create positive outcomes. I'm generally optimistic and resilient, which helps me stay calm under pressure.
+
+======================================================================
+essay_id              : A_rv_89_q009
+high-residual trait   : extraversion  (intended_z=+1.58, pred_z=-1.19, residual=-2.77)
+intended z-scores     : { openness=+1.04, conscientiousness=+0.53, extraversion=+1.58, agreeableness=+1.23, neuroticism=-0.62 }
+intended levels       : { openness=HIGH, conscientiousness=HIGH, extraversion=HIGH, agreeableness=HIGH, neuroticism=LOW }
+predicted z-scores    : { openness=-0.88, conscientiousness=-0.73, extraversion=-1.19, agreeableness=-0.88, neuroticism=+0.64 }
+interview question    : What motivates you?
+
+I find motivation in exploring new ideas and experiences. The world is full of opportunities for growth, and I love diving into projects that challenge me and allow me to innovate. I’m driven by a strong sense of responsibility and a desire to achieve my goals, often collaborating with others to create a positive impact. Building strong relationships and supporting my peers energizes me, and I thrive in social settings. Challenges don’t stress me; instead, they fuel my determination and enthusiasm to learn and adapt.
+
+======================================================================
+essay_id              : A_rv_266_q021
+high-residual trait   : extraversion  (intended_z=+1.27, pred_z=-1.48, residual=-2.75)
+intended z-scores     : { openness=+1.06, conscientiousness=+0.72, extraversion=+1.27, agreeableness=+0.98, neuroticism=-0.27 }
+intended levels       : { openness=HIGH, conscientiousness=HIGH, extraversion=HIGH, agreeableness=HIGH, neuroticism=MID }
+predicted z-scores    : { openness=-1.04, conscientiousness=-1.08, extraversion=-1.48, agreeableness=-0.93, neuroticism=+0.40 }
+interview question    : Where do you see yourself in the next 5 years?
+
+In five years, I see myself thriving in a dynamic work environment where I can blend my creativity with a strong work ethic. I envision taking on leadership roles that allow me to collaborate with diverse teams, driving innovative projects that make a positive impact. I aim to continue developing my skills, perhaps pursuing further education or certifications. Ultimately, I want to contribute to a company culture that values collaboration and growth, while also building strong relationships within my team and the larger community.
+
+======================================================================
+essay_id              : A_rv_241_q009
+high-residual trait   : extraversion  (intended_z=+1.59, pred_z=-1.15, residual=-2.74)
+intended z-scores     : { openness=+1.13, conscientiousness=+0.69, extraversion=+1.59, agreeableness=+0.59, neuroticism=-0.63 }
+intended levels       : { openness=HIGH, conscientiousness=HIGH, extraversion=HIGH, agreeableness=HIGH, neuroticism=LOW }
+predicted z-scores    : { openness=-1.07, conscientiousness=-0.95, extraversion=-1.15, agreeableness=-0.77, neuroticism=+0.56 }
+interview question    : What motivates you?
+
+I'm motivated by a desire to explore new ideas and connect with people. I thrive on collaboration, so working in a team that values creativity and innovation really inspires me. Achieving goals and seeing the tangible outcomes of our efforts is incredibly fulfilling for me. I enjoy setting high standards for myself and pushing to meet them, while also supporting others along the way. Overall, I find that a positive, dynamic environment fuels my passion and creativity, and drives me to continuously learn and grow.
+
+======================================================================
+essay_id              : A_rv_241_q007
+high-residual trait   : extraversion  (intended_z=+1.59, pred_z=-1.10, residual=-2.69)
+intended z-scores     : { openness=+1.13, conscientiousness=+0.69, extraversion=+1.59, agreeableness=+0.59, neuroticism=-0.63 }
+intended levels       : { openness=HIGH, conscientiousness=HIGH, extraversion=HIGH, agreeableness=HIGH, neuroticism=LOW }
+predicted z-scores    : { openness=-0.63, conscientiousness=-0.68, extraversion=-1.10, agreeableness=-0.66, neuroticism=+0.43 }
+interview question    : How do you work under pressure? Can you handle the pressure?
+
+I thrive under pressure! I see it as an opportunity to challenge myself and find creative solutions. When deadlines are tight, I stay organized and prioritize my tasks to maintain focus. I actually enjoy collaborating with others during stressful times, as it often leads to innovative ideas and team bonding. I’m generally calm and adaptable, which helps me keep a level head. I believe that maintaining a positive attitude not only enhances my performance but also uplifts those around me when the stakes are high.
+
+======================================================================
+essay_id              : A_rv_241_q011
+high-residual trait   : extraversion  (intended_z=+1.59, pred_z=-1.07, residual=-2.66)
+intended z-scores     : { openness=+1.13, conscientiousness=+0.69, extraversion=+1.59, agreeableness=+0.59, neuroticism=-0.63 }
+intended levels       : { openness=HIGH, conscientiousness=HIGH, extraversion=HIGH, agreeableness=HIGH, neuroticism=LOW }
+predicted z-scores    : { openness=-0.48, conscientiousness=-0.67, extraversion=-1.07, agreeableness=-0.74, neuroticism=+0.55 }
+interview question    : Tell me about a time when you had to step into a role outside of your expertise to support the team's objectives.
+
+In a group project last semester, we faced a tight deadline, and our designated leader fell ill. Even though I wasn’t the most experienced in project management, I stepped up to coordinate our efforts. I organized meetings, delegated tasks based on everyone’s strengths, and maintained open communication to keep us motivated. By staying adaptable and positive, we not only met our deadline but also delivered a project we were all proud of. It was rewarding to see our teamwork thrive in a challenging situation, reinforcing my belief in collaboration.
+
+======================================================================
+essay_id              : A_rv_89_q007
+high-residual trait   : extraversion  (intended_z=+1.58, pred_z=-1.06, residual=-2.64)
+intended z-scores     : { openness=+1.04, conscientiousness=+0.53, extraversion=+1.58, agreeableness=+1.23, neuroticism=-0.62 }
+intended levels       : { openness=HIGH, conscientiousness=HIGH, extraversion=HIGH, agreeableness=HIGH, neuroticism=LOW }
+predicted z-scores    : { openness=-0.59, conscientiousness=-0.77, extraversion=-1.06, agreeableness=-0.61, neuroticism=+0.47 }
+interview question    : How do you work under pressure? Can you handle the pressure?
+
+I actually thrive under pressure! I find that challenging situations bring out my best work. I stay organized and focused, which helps me prioritize tasks effectively. I also enjoy collaborating with my team during stressful times, as our combined energy can lead to creative solutions. I keep a positive attitude and maintain open communication, which helps reduce tension. My ability to stay calm allows me to think clearly and tackle problems head-on. Overall, I view pressure as an opportunity to grow and improve.
+
+======================================================================
+essay_id              : A_rv_159_q053
+high-residual trait   : extraversion  (intended_z=+1.41, pred_z=-1.22, residual=-2.63)
+intended z-scores     : { openness=+1.07, conscientiousness=+0.81, extraversion=+1.41, agreeableness=+0.79, neuroticism=-0.51 }
+intended levels       : { openness=HIGH, conscientiousness=HIGH, extraversion=HIGH, agreeableness=HIGH, neuroticism=LOW }
+predicted z-scores    : { openness=-0.90, conscientiousness=-0.75, extraversion=-1.22, agreeableness=-0.49, neuroticism=+0.38 }
+interview question    : What do you think is an ideal work environment?
+
+I believe an ideal work environment fosters collaboration and creativity, where ideas can flow freely among team members. I thrive in spaces that encourage open communication and support diverse perspectives. A structured approach to projects helps keep everyone aligned, while also allowing for flexibility and innovation. I appreciate positive relationships with colleagues, where we can motivate and support each other. Overall, a balanced atmosphere that values teamwork, respect, and personal growth makes for an inspiring and productive workplace.
+
