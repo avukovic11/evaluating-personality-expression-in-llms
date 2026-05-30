@@ -253,7 +253,7 @@ cCON,emo_negative,high,1,0.0,0.0
 cCON,emo_negative,low,1,0.0,0.0
 cOPN,word_count_log,humans,248,6.409032780809935,0.37903034383908646
 cOPN,word_count_log,high,1,6.738152494595957,0.0
-cOPN,word_count_log,low,1,6.709304340258298,0.0
+cOPN,word_count_log,low,1,6.709304340258299,0.0
 cOPN,avg_sentence_len,humans,248,21.596987585723113,52.14512266611577
 cOPN,avg_sentence_len,high,1,20.071428571428573,0.0
 cOPN,avg_sentence_len,low,1,20.475,0.0
