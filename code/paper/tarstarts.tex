@@ -39,6 +39,29 @@ In this work we ask a concrete version of that question: if we instruct GPT-4o-m
 We study this on the Pennebaker \& King Essays dataset, where students wrote unstructured essays and received binary Big Five labels, and we train RoBERTa-base as a multi-label \emph{probe} that predicts those five traits from text; the probe is our measurement instrument, not a claim about ground-truth personality.
 We then generate new essays in two regimes---Style~B varies a single trait at a time (\textsc{high}, \textsc{low}, or no trait instruction) to test whether steering one dimension works in isolation, while Style~A copies full five-trait profiles from real human annotators to test more realistic multi-trait control---and for every generated essay we run the probe and compare its outputs to the personality we asked for and to the distribution of scores on held-out human essays, using distributional distances and density plots for Style~B, per-essay agreement for Style~A, and LIWC-style linguistic analysis to inspect which cues differ between human and LLM text.
 This paper describes that end-to-end pipeline---data preparation, probe training, LLM generation, evaluation, and error analysis---and reports how faithfully explicit personality instructions translate into detectable stylistic shifts.
+Figure~\ref{fig:birds-eye} gives a high-level view of the three-phase design; Figure~\ref{fig:pipeline} maps the same workflow to the concrete \texttt{src/} modules in our codebase.
+
+\begin{figure*}[t]
+\begin{center}
+\includegraphics[width=\textwidth]{paper_pictures/birds_eye.png}
+\caption{High-level experimental architecture.
+Phase~1 trains a transformer-based personality \emph{probe} on human text (Pennebaker Essays and RecruitView interview transcripts), alongside simpler baselines.
+Phase~2 uses Style~A and Style~B prompt templates to steer GPT-4o-mini generation.
+Phase~3 scores LLM outputs with the probe and measures alignment via distributional and paired metrics, followed by LIWC-style and SHAP-based linguistic analysis.}
+\label{fig:birds-eye}
+\end{center}
+\end{figure*}
+
+\begin{figure*}[t]
+\begin{center}
+\includegraphics[width=\textwidth]{paper_pictures/pipeline.png}
+\caption{Code pipeline overview.
+Human data are prepared by \texttt{data.py} and \texttt{data\_recruitview.py}, then used to train baselines and the probe (\texttt{baselines.py}, \texttt{classifier.py}).
+Prompt templates (\texttt{prompts.py}) drive async LLM generation (\texttt{generate.py}).
+Probe predictions and generated text are evaluated (\texttt{evaluate.py}) and analysed linguistically (\texttt{analyze.py}).}
+\label{fig:pipeline}
+\end{center}
+\end{figure*}
 
 \section{Second section}
 
@@ -65,15 +88,9 @@ The paper should have a minimum of 3 and a maximum of 4 pages, plus an additiona
 
 \subsection{Figures}
 
-Here is an example on how to include figures in the paper. Figures are included in \LaTeX{} code immediately \textit{after} the text in which these figures are referenced. Allow \LaTeX{} to place the figure where it believes is best (usually on top of the page of at the position where you would not place the figure). Figures are referenced as follows: ``Figure~\ref{fig:figure1} shows \dots''. Use tilde (\verb.~.) to prevent separation between the word ``Figure'' and its enumeration.
-
-\begin{figure}
-\begin{center}
-\includegraphics[width=\columnwidth]{drawing.pdf}
-\caption{This is the figure caption. Full sentences should be followed with a dot. The caption should be placed \textit{below} the figure. Caption should be short; details should be explained in the text.}
-\label{fig:figure1}
-\end{center}
-\end{figure}
+Figures are included in \LaTeX{} code immediately \textit{after} the text in which they are first referenced.
+Our architecture diagrams appear in the Introduction as Figure~\ref{fig:birds-eye} and Figure~\ref{fig:pipeline}.
+Use tilde (\verb.~.) to prevent separation between the word ``Figure'' and its enumeration.
 
 \subsection{Tables}
 
