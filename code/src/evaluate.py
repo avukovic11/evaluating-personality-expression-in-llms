@@ -144,13 +144,18 @@ def load_human_test_probs(model_slug: str, dataset: str = "essays") -> pd.DataFr
 
 def score_essays(
     texts: list[str], model_slug: str, batch_size: int = 16,
-    dataset: str = "essays",
+    dataset: str = "essays", max_seq_len: int | None = None,
 ) -> np.ndarray:
     """Run the trained probe over a list of essays. Returns (N, 5) scores.
 
     Essays      : sigmoid probabilities (0–1).
     RecruitView : raw regression outputs (z-scores, no transform).
+
+    `max_seq_len` should match the probe's training-time max length. Pass
+    e.g. 2048 to use a ModernBERT checkpoint trained at `_seq2048`.
     """
+    if max_seq_len is None:
+        max_seq_len = config.MAX_SEQ_LEN
     results_slug = _result_dir_name(model_slug, dataset)
     ckpt = config.CHECKPOINTS_DIR / f"{results_slug}_seed42"
     if not ckpt.exists():
@@ -170,7 +175,7 @@ def score_essays(
         batch = texts[i:i + batch_size]
         inputs = tokenizer(
             batch, return_tensors="pt", truncation=True,
-            max_length=config.MAX_SEQ_LEN, padding=True,
+            max_length=max_seq_len, padding=True,
         ).to(device)
         with torch.no_grad():
             logits = model(**inputs).logits.cpu().numpy()
@@ -630,10 +635,21 @@ def main() -> None:
         "--bootstrap", type=int, default=1000,
         help="Bootstrap resamples for Wasserstein CIs. Default 1000.",
     )
+    parser.add_argument(
+        "--max-seq-len", type=int, default=config.MAX_SEQ_LEN,
+        help=(
+            f"Tokenize LLM essays at this length. Default {config.MAX_SEQ_LEN}; "
+            f"pass 2048 to use a ModernBERT checkpoint trained at _seq2048. "
+            f"The model_slug auto-suffixes with _seqN when N differs from "
+            f"the default, so the right checkpoint is located."
+        ),
+    )
     args = parser.parse_args()
 
     config.ensure_dirs()
     model_slug = args.model.split("/")[-1]
+    if args.max_seq_len != config.MAX_SEQ_LEN:
+        model_slug = f"{model_slug}_seq{args.max_seq_len}"
 
     style_subdir = "style_b" if args.style == "B" else "style_a"
     jsonl = _llm_outputs_dir(args.dataset) / _style_jsonl_name(args.dataset, args.style)
@@ -664,6 +680,7 @@ def main() -> None:
     texts = [r["generated_text"] for r in records]
     probs = score_essays(
         texts, model_slug, batch_size=args.batch_size, dataset=args.dataset,
+        max_seq_len=args.max_seq_len,
     )
 
     if args.style == "B":

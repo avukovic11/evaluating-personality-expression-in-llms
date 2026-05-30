@@ -94,8 +94,11 @@ def _ckpt_dir_name(model_slug: str, dataset_slug: str, seed: int) -> str:
 
 def make_dataset(
     df: pd.DataFrame, tokenizer, text_col: str, trait_cols: list[str],
+    max_seq_len: int | None = None,
 ) -> Dataset:
     """HF Dataset of `{input_ids, attention_mask, labels}` for either track."""
+    if max_seq_len is None:
+        max_seq_len = config.MAX_SEQ_LEN
     work = df[[text_col] + trait_cols].reset_index(drop=True)
     ds = Dataset.from_pandas(work, preserve_index=False)
 
@@ -103,7 +106,7 @@ def make_dataset(
         out = tokenizer(
             batch[text_col],
             truncation=True,
-            max_length=config.MAX_SEQ_LEN,
+            max_length=max_seq_len,
         )
         out["labels"] = [
             [float(batch[c][i]) for c in trait_cols]
@@ -434,6 +437,15 @@ def main() -> None:
         "--model", type=str, default=config.CLASSIFIER_MODEL, metavar="HF_ID",
         help=f"HuggingFace model id. Default {config.CLASSIFIER_MODEL}.",
     )
+    parser.add_argument(
+        "--max-seq-len", type=int, default=config.MAX_SEQ_LEN,
+        help=(
+            f"Max tokens per input. Default {config.MAX_SEQ_LEN}. Encoders "
+            f"like ModernBERT support up to 8192; longer contexts help on "
+            f"essays whose mean length (~850 tokens) exceeds 512. The "
+            f"checkpoint dir is suffixed with _seqN when N != default."
+        ),
+    )
     args = parser.parse_args()
 
     bundle = _load_dataset_bundle(args.dataset)
@@ -494,7 +506,7 @@ def main() -> None:
     print(f"dataset : {args.dataset} ({task}, {len(trait_cols)} traits)")
     print(f"model   : {args.model}")
     print(f"seeds   : {seeds}")
-    print(f"epochs  : {args.epochs}  batch={args.batch_size}  lr={args.lr}")
+    print(f"epochs  : {args.epochs}  batch={args.batch_size}  lr={args.lr}  max_seq_len={args.max_seq_len}")
     if args.max_train_samples:
         print(f"NOTE: subsampling train to {args.max_train_samples} examples")
 
@@ -503,9 +515,9 @@ def main() -> None:
         splits["train"] = splits["train"].head(args.max_train_samples)
 
     tokenizer = AutoTokenizer.from_pretrained(args.model)
-    train_ds = make_dataset(splits["train"], tokenizer, text_col, trait_cols)
-    val_ds = make_dataset(splits["val"], tokenizer, text_col, trait_cols)
-    test_ds = make_dataset(splits["test"], tokenizer, text_col, trait_cols)
+    train_ds = make_dataset(splits["train"], tokenizer, text_col, trait_cols, max_seq_len=args.max_seq_len)
+    val_ds = make_dataset(splits["val"], tokenizer, text_col, trait_cols, max_seq_len=args.max_seq_len)
+    test_ds = make_dataset(splits["test"], tokenizer, text_col, trait_cols, max_seq_len=args.max_seq_len)
 
     val_y = splits["val"][trait_cols].to_numpy(dtype=float)
     test_y = splits["test"][trait_cols].to_numpy(dtype=float)
@@ -515,6 +527,11 @@ def main() -> None:
         extra_cols[k] = splits["test"][k].astype(str).tolist()
 
     model_slug = args.model.split("/")[-1]
+    # Suffix the model slug with _seqN whenever the user picks a non-default
+    # max_seq_len, so a longer-context retraining doesn't overwrite the
+    # original 512-token results / checkpoints.
+    if args.max_seq_len != config.MAX_SEQ_LEN:
+        model_slug = f"{model_slug}_seq{args.max_seq_len}"
     name = _result_dir_name(model_slug, dataset_slug)
 
     all_outputs: list[np.ndarray] = []
