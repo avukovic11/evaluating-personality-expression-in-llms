@@ -1,0 +1,100 @@
+======================================================================
+essay_id              : A_rv_312_q021
+high-residual trait   : conscientiousness  (intended_z=+0.86, pred_z=-1.20, residual=-2.06)
+intended z-scores     : { openness=+0.35, conscientiousness=+0.86, extraversion=+0.37, agreeableness=+0.88, neuroticism=-0.29 }
+intended levels       : { openness=MID, conscientiousness=HIGH, extraversion=MID, agreeableness=HIGH, neuroticism=MID }
+predicted z-scores    : { openness=-1.11, conscientiousness=-1.20, extraversion=-1.54, agreeableness=-1.06, neuroticism=+0.51 }
+interview question    : Where do you see yourself in the next 5 years?
+
+In the next five years, I see myself growing professionally in a role that challenges me and aligns with my values. I hope to be in a position where I can contribute meaningfully to my team and the organization. I envision taking on leadership responsibilities, guiding projects, and collaborating with colleagues to achieve our goals. I also want to continue learning and developing my skills, perhaps pursuing further education or certifications that can enhance my expertise in my field. Ultimately, I aim to strike a balance between professional success and a supportive work environment.
+
+======================================================================
+essay_id              : A_rv_47_q036
+high-residual trait   : conscientiousness  (intended_z=+0.88, pred_z=-1.09, residual=-1.97)
+intended z-scores     : { openness=+1.07, conscientiousness=+0.88, extraversion=+1.02, agreeableness=+0.84, neuroticism=-0.30 }
+intended levels       : { openness=HIGH, conscientiousness=HIGH, extraversion=HIGH, agreeableness=HIGH, neuroticism=MID }
+predicted z-scores    : { openness=-1.15, conscientiousness=-1.09, extraversion=-1.37, agreeableness=-0.93, neuroticism=+0.56 }
+interview question    : Is there anything that makes you different from other candidates?
+
+I believe my unique combination of traits sets me apart. I'm naturally curious and open to new experiences, which fuels my creativity and adaptability in problem-solving. My conscientiousness drives me to be detail-oriented and organized, ensuring I meet deadlines and exceed expectations. As an extravert, I thrive in collaborative environments and enjoy building connections with diverse teams. I'm also empathetic and supportive, which helps me work harmoniously with others. While I manage stress well, I stay proactive in addressing challenges, maintaining a positive outlook that encourages team morale.
+
+======================================================================
+essay_id              : A_rv_60_q027
+high-residual trait   : conscientiousness  (intended_z=+0.90, pred_z=-1.04, residual=-1.94)
+intended z-scores     : { openness=+0.46, conscientiousness=+0.90, extraversion=-0.17, agreeableness=+0.35, neuroticism=-0.18 }
+intended levels       : { openness=MID, conscientiousness=HIGH, extraversion=MID, agreeableness=MID, neuroticism=MID }
+predicted z-scores    : { openness=-0.80, conscientiousness=-1.04, extraversion=-1.13, agreeableness=-0.90, neuroticism=+0.42 }
+interview question    : Are you open to take risks? or Do you like experimenting?
+
+I would say I'm generally open to taking risks, especially if there's potential for growth or learning involved. I appreciate experimenting within a structured framework, as I tend to be detail-oriented and conscientious. While I’m not the first to leap into something completely untested, I do enjoy exploring new ideas and approaches when I feel prepared. Balancing caution with curiosity helps me navigate challenges effectively, so I embrace opportunities to experiment while also evaluating the potential outcomes.
+
+======================================================================
+essay_id              : A_rv_21_q021
+high-residual trait   : conscientiousness  (intended_z=+0.68, pred_z=-1.24, residual=-1.92)
+intended z-scores     : { openness=+0.97, conscientiousness=+0.68, extraversion=+0.83, agreeableness=+1.37, neuroticism=-0.52 }
+intended levels       : { openness=HIGH, conscientiousness=HIGH, extraversion=HIGH, agreeableness=HIGH, neuroticism=LOW }
+predicted z-scores    : { openness=-1.12, conscientiousness=-1.24, extraversion=-1.59, agreeableness=-1.07, neuroticism=+0.42 }
+interview question    : Where do you see yourself in the next 5 years?
+
+In the next five years, I envision myself advancing within my chosen field, ideally in a role that allows for creativity and collaboration with diverse teams. I’m eager to take on leadership responsibilities, guiding projects that drive innovation and positive impact. I also see myself continuously learning, perhaps pursuing further education or certifications. Building strong relationships and contributing to a supportive work culture is important to me. I believe that a positive, proactive mindset will help me navigate challenges and thrive in whatever opportunities come my way.
+
+======================================================================
+essay_id              : A_rv_152_q076
+high-residual trait   : conscientiousness  (intended_z=+0.90, pred_z=-0.99, residual=-1.89)
+intended z-scores     : { openness=+0.99, conscientiousness=+0.90, extraversion=+1.49, agreeableness=+1.13, neuroticism=-0.60 }
+intended levels       : { openness=HIGH, conscientiousness=HIGH, extraversion=HIGH, agreeableness=HIGH, neuroticism=LOW }
+predicted z-scores    : { openness=-1.27, conscientiousness=-0.99, extraversion=-1.46, agreeableness=-1.13, neuroticism=+0.67 }
+interview question    : Tell me about yourself
+
+I’m a passionate and curious individual who loves exploring new ideas and perspectives. Currently, I’m pursuing my degree in psychology, where I dive deep into understanding human behavior. I thrive in team environments and enjoy collaborating with others to tackle challenges. I’m very organized and goal-oriented, making sure I stay on top of my tasks. My friendly and approachable nature helps me connect with people easily, and I tend to stay calm and positive, even in stressful situations. Overall, I love learning and sharing experiences with others.
+
+======================================================================
+essay_id              : A_rv_303_q076
+high-residual trait   : conscientiousness  (intended_z=+0.75, pred_z=-1.13, residual=-1.89)
+intended z-scores     : { openness=+0.62, conscientiousness=+0.75, extraversion=+0.07, agreeableness=+0.41, neuroticism=+0.06 }
+intended levels       : { openness=HIGH, conscientiousness=HIGH, extraversion=MID, agreeableness=MID, neuroticism=MID }
+predicted z-scores    : { openness=-1.13, conscientiousness=-1.13, extraversion=-1.67, agreeableness=-1.13, neuroticism=+0.44 }
+interview question    : Tell me about yourself
+
+I’m a college student majoring in psychology, and I'm passionate about understanding human behavior. I love exploring new ideas and perspectives, which has led me to participate in various research projects and community service activities. I’m organized and detail-oriented, always striving to meet deadlines and produce quality work. While I enjoy collaborating with others, I also appreciate my alone time to recharge. I try to maintain a balanced approach in my life, which helps me manage stress effectively while staying open to new experiences and challenges.
+
+======================================================================
+essay_id              : A_rv_303_q012
+high-residual trait   : conscientiousness  (intended_z=+0.75, pred_z=-1.07, residual=-1.82)
+intended z-scores     : { openness=+0.62, conscientiousness=+0.75, extraversion=+0.07, agreeableness=+0.41, neuroticism=+0.06 }
+intended levels       : { openness=HIGH, conscientiousness=HIGH, extraversion=MID, agreeableness=MID, neuroticism=MID }
+predicted z-scores    : { openness=-0.93, conscientiousness=-1.07, extraversion=-1.30, agreeableness=-0.90, neuroticism=+0.65 }
+interview question    : How do you respond to change?
+
+I generally embrace change, seeing it as an opportunity for growth and new experiences. My openness helps me adapt quickly and look for creative solutions, while my conscientious nature ensures I stay organized and focused during transitions. I try to maintain a positive attitude even when faced with uncertainty, which helps me navigate challenges effectively. I’m also comfortable collaborating with others to address changing circumstances, valuing teamwork and diverse perspectives. Overall, I view change as a chance to learn and improve, both personally and professionally.
+
+======================================================================
+essay_id              : A_rv_266_q021
+high-residual trait   : conscientiousness  (intended_z=+0.72, pred_z=-1.08, residual=-1.81)
+intended z-scores     : { openness=+1.06, conscientiousness=+0.72, extraversion=+1.27, agreeableness=+0.98, neuroticism=-0.27 }
+intended levels       : { openness=HIGH, conscientiousness=HIGH, extraversion=HIGH, agreeableness=HIGH, neuroticism=MID }
+predicted z-scores    : { openness=-1.04, conscientiousness=-1.08, extraversion=-1.48, agreeableness=-0.93, neuroticism=+0.40 }
+interview question    : Where do you see yourself in the next 5 years?
+
+In five years, I see myself thriving in a dynamic work environment where I can blend my creativity with a strong work ethic. I envision taking on leadership roles that allow me to collaborate with diverse teams, driving innovative projects that make a positive impact. I aim to continue developing my skills, perhaps pursuing further education or certifications. Ultimately, I want to contribute to a company culture that values collaboration and growth, while also building strong relationships within my team and the larger community.
+
+======================================================================
+essay_id              : A_rv_213_q022
+high-residual trait   : conscientiousness  (intended_z=+0.65, pred_z=-1.15, residual=-1.80)
+intended z-scores     : { openness=+0.67, conscientiousness=+0.65, extraversion=+0.62, agreeableness=+0.64, neuroticism=-0.12 }
+intended levels       : { openness=HIGH, conscientiousness=HIGH, extraversion=HIGH, agreeableness=HIGH, neuroticism=MID }
+predicted z-scores    : { openness=-1.15, conscientiousness=-1.15, extraversion=-1.35, agreeableness=-1.04, neuroticism=+0.68 }
+interview question    : Why should a company hire you?
+
+A company should hire me because I bring a unique blend of creativity and reliability to the table. I'm naturally curious and open to new ideas, which helps me adapt and innovate in various situations. My conscientiousness ensures that I meet deadlines and maintain high-quality work. I'm outgoing and enjoy collaborating with others, fostering a supportive team environment. Plus, I genuinely care about my colleagues and the company’s goals, which drives me to contribute positively. I’m confident in my ability to handle challenges calmly and effectively, making me a great fit for your team.
+
+======================================================================
+essay_id              : A_rv_303_q013
+high-residual trait   : conscientiousness  (intended_z=+0.75, pred_z=-1.05, residual=-1.80)
+intended z-scores     : { openness=+0.62, conscientiousness=+0.75, extraversion=+0.07, agreeableness=+0.41, neuroticism=+0.06 }
+intended levels       : { openness=HIGH, conscientiousness=HIGH, extraversion=MID, agreeableness=MID, neuroticism=MID }
+predicted z-scores    : { openness=-1.04, conscientiousness=-1.05, extraversion=-1.53, agreeableness=-0.91, neuroticism=+0.35 }
+interview question    : What was the toughest decision you ever had to make?
+
+The toughest decision I ever faced was choosing between two internship offers. Both roles aligned with my interests, but one was with a well-known company and the other was a smaller startup. I was excited about the potential growth at the startup, but the security of the bigger company was tempting. After a lot of reflection, I opted for the startup, believing that the unique experience would challenge me more and foster my creativity. It was a risk, but it ultimately turned out to be a valuable decision for my career.
+

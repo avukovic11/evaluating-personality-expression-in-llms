@@ -248,12 +248,12 @@ def run_liwc_comparison(
 # ---------------------------------------------------------------------------
 
 def run_tfidf_comparison(
-    style_d_records: list[dict], human_texts: list[str], out_dir: Path,
+    style_b_records: list[dict], human_texts: list[str], out_dir: Path,
     top_k: int = 20,
 ) -> None:
     print("\n=== TF-IDF vocabulary comparison ===")
 
-    df_d = pd.DataFrame(style_d_records)
+    df_d = pd.DataFrame(style_b_records)
     rows: list[dict] = []
 
     for trait in config.TRAIT_COLS:
@@ -336,11 +336,11 @@ def _keyword_rate(text: str, pattern: re.Pattern) -> float:
 
 
 def run_keyword_frequency(
-    style_d_records: list[dict], human_texts: list[str], out_dir: Path,
+    style_b_records: list[dict], human_texts: list[str], out_dir: Path,
 ) -> None:
     print("\n=== Keyword frequency analysis ===")
 
-    df_d = pd.DataFrame(style_d_records)
+    df_d = pd.DataFrame(style_b_records)
     freq_rows: list[dict] = []
     stats_rows: list[dict] = []
 
@@ -1158,10 +1158,10 @@ def main() -> None:
         )
 
     if not args.skip_tfidf:
-        run_tfidf_comparison(style_d_records, human_texts, out_dir)
+        run_tfidf_comparison(style_b_records, human_texts, out_dir)
 
     if not args.skip_keyword_freq:
-        run_keyword_frequency(style_d_records, human_texts, out_dir)
+        run_keyword_frequency(style_b_records, human_texts, out_dir)
 
     if not args.skip_errors:
         a_pred_path = (
