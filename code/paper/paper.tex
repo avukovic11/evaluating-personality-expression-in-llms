@@ -40,9 +40,9 @@ Our central finding is that GPT achieves measured steering primarily through \em
 
 \section{Related Work}
 
-Personality classification from text is a long-standing task with the Pennebaker \& King essays as a standard benchmark \citep{pennebaker-king-1999,mehta-etal-2020-bottom}. \citet{kerz-etal-2022-pushing} push the state of the art on this dataset to 63.5\,\% mean accuracy using psycholinguistic feature contours combined with a transformer. Recent work casts detection as chain-of-thought over a questionnaire \citep{yang-etal-2023-psycot} or introduces psychological attention \citep{zhang-etal-2023-psyattention}.
+Personality classification from text is a long-standing task with the Pennebaker \& King essays as a standard benchmark \citep{pennebaker-king-1999,mehta-etal-2020-bottom}. The state of the art on this dataset reached 63.5\,\% mean accuracy using psycholinguistic feature contours combined with a transformer \citep{kerz-etal-2022-pushing}. Recent work casts detection as chain-of-thought over a questionnaire \citep{yang-etal-2023-psycot} or introduces psychological attention \citep{zhang-etal-2023-psyattention}.
 
-LLM personality production is a younger but growing area. \citet{v-ganesan-etal-2023-systematic} systematically evaluate GPT-3 as a personality annotator, but do not test whether LLM-generated text matches a requested profile. Complementary work prompts LLMs to adopt a Big Five persona and scores the output with validated psychometric inventories or with short-text probes; such studies share two blind spots: they operate within a single text register and never verify whether the probe's signal is driven by genuine stylistic expression or by lexical contamination. We run the same evaluation pipeline on two corpora with maximally different registers and add an explicit lexical-echo audit.
+LLM personality production is a younger but growing area. GPT-3 has been systematically evaluated as a personality annotator, but without testing whether LLM-generated text matches a requested profile \citep{v-ganesan-etal-2023-systematic}. Complementary work prompts LLMs to adopt a Big Five persona and scores the output with validated psychometric inventories or with short-text probes; such studies share two blind spots: they operate within a single text register and never verify whether the probe's signal is driven by genuine stylistic expression or by lexical contamination. We run the same evaluation pipeline on two corpora with maximally different registers and add an explicit lexical-echo audit.
 
 \section{Method}
 
@@ -94,7 +94,7 @@ TF-IDF / LIWC & 0.60 / 0.57 & --- & --- & --- \\
 \end{center}
 \end{table}
 
-Table~\ref{tab:probes} reports probe and baseline performance. RoBERTa macro-accuracy of 0.584 sits below the 63.5\% reported by \citet{kerz-etal-2022-pushing}, as expected for a single-seed model without an ensemble. Openness is the easiest trait (RoBERTa AUC 0.716); Conscientiousness the hardest (0.564). User-level aggregation on RecruitView roughly doubles macro Spearman (0.27 to 0.47). We treat RoBERTa as the primary probe.
+Table~\ref{tab:probes} reports probe and baseline performance. RoBERTa macro-accuracy of 0.584 sits below the 63.5\% state-of-the-art \citep{kerz-etal-2022-pushing}, as expected for a single-seed model without an ensemble. Openness is the easiest trait (RoBERTa AUC 0.716); Conscientiousness the hardest (0.564). User-level aggregation on RecruitView roughly doubles macro Spearman (0.27 to 0.47). We treat RoBERTa as the primary probe.
 
 \subsection{Style B on Essays: Steering Works}
 
