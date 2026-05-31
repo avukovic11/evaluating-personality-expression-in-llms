@@ -23,7 +23,7 @@ Unska 3, 10000 Zagreb, Croatia\\
 }
 
 \abstract{
-Persona-aware chatbots and agents rely on language models writing in a requested personality, but how well they do this is unclear. We test whether GPT-4o-mini reflects predefined Big Five profiles using fine-tuned RoBERTa and ModernBERT probes trained on two structurally different corpora: Pennebaker stream-of-consciousness essays (written text, binary OCEAN labels) and RecruitView interview transcripts (transcribed speech, continuous z-scores). We generate 7\,117 essays and interview answers under single-trait and full-profile prompts with label-only steering and score them with both probes. Wasserstein-1 separation of \textsc{high} versus \textsc{low} predicted distributions reaches 0.30 for Openness on essays but stays under 0.07 on interview answers. Even though the prompts name only the trait label, GPT uses trait-specific vocabulary at 3 to 10 times the human rate, indicating that most of the measurable steering is GPT producing its own learned trait keywords rather than expressing the construct through implicit style. We treat the cross-register gap as evidence that probe-based LLM evaluation only generalises within its training register.
+Persona-aware chatbots and agents rely on language models writing in a requested personality, but how well they do this is unclear. We test whether GPT-4o-mini reflects predefined Big Five profiles using fine-tuned RoBERTa and ModernBERT probes trained on two structurally different corpora: Pennebaker stream-of-consciousness essays (written text, binary OCEAN labels) and RecruitView interview transcripts (transcribed speech, continuous z-scores). We generate 7\,117 essays and interview answers under single-trait and full-profile prompts with label-only steering and score them with both probes. Wasserstein-1 separation of \textsc{high} versus \textsc{low} predicted distributions reaches 0.30 for Openness on essays but stays under 0.07 on interview answers. Even though the prompts name only the trait label, GPT uses trait-specific vocabulary at 3 to 15 times the human rate across both registers, indicating that most of the measurable steering is GPT producing its own learned trait keywords rather than expressing the construct through implicit style. We treat the cross-register gap as evidence that probe-based LLM evaluation only generalises within its training register.
 }
 
 \begin{document}
@@ -142,19 +142,19 @@ In Style A (full five-trait profiles, $n=500$), the probe distinguishes intended
 \subsection{RecruitView: Steering Collapses}
 
 \begin{table}[t]
-\caption{Style B $W_1$ on RecruitView (RoBERTa, z-scored, 95\% CIs). All entries near zero; GPT predictions cluster below $z=0$ regardless of condition.}
+\caption{Style B $W_1$ on RecruitView (z-scored, 95\% CIs from RoBERTa; MB = ModernBERT). All values near zero; only Conscientiousness shows partial separation under ModernBERT.}
 \label{tab:styleb-rv}
 \begin{center}
 \small
-\begin{tabular}{lccc}
+\begin{tabular}{lcc}
 \toprule
-Trait & $W_1$ [CI] & H mean & L mean \\
+Trait & R $W_1$ [CI] & MB $W_1$ \\
 \midrule
-openness          & 0.07 [0.05, 0.09] & $-0.52$ & $-0.45$ \\
-conscientiousness & 0.06 [0.05, 0.07] & $-0.46$ & $-0.40$ \\
-extraversion      & 0.03 [0.02, 0.04] & $-0.51$ & $-0.54$ \\
-agreeableness     & 0.05 [0.03, 0.06] & $-0.39$ & $-0.34$ \\
-neuroticism       & 0.01 [0.01, 0.01] & $+0.16$ & $+0.17$ \\
+openness          & 0.07 [0.05, 0.09] & 0.06 \\
+conscientiousness & 0.06 [0.05, 0.07] & \textbf{0.14} \\
+extraversion      & 0.03 [0.02, 0.04] & 0.08 \\
+agreeableness     & 0.05 [0.03, 0.06] & 0.06 \\
+neuroticism       & 0.01 [0.01, 0.01] & 0.05 \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -190,13 +190,15 @@ LIWC-style features show that GPT steers each trait through distinct surface cue
 
 Table~\ref{tab:echo} quantifies lexical echo. We built a small keyword list per trait pole (e.g., ``anxious'', ``worried'', ``stressed'' for high Neuroticism) and measured usage rates. Critically, \emph{none} of these keywords appear in our prompts, which contain only the construct label. The echo therefore cannot arise from copying prompt words; it reflects the model's own pretrained association between a label (``extraverted'') and a trait-specific vocabulary. GPT \textsc{high} essays use these words at 3 to 10 times the human rate on every trait.
 
-SHAP (SHapley Additive exPlanations \citep{lundberg-lee-2017-shap}; per-token attribution values from a cooperative game-theoretic decomposition of the model output) on a held-out sample ($n=15$ per condition) confirms that the probe is holistic: mean signed attributions lie in the $\pm 0.001$--$0.005$ range across ${\approx}450$ tokens, with no single token decisive. The keyword flood therefore works through accumulated distributed contributions: each injected trait word nudges the score slightly, and together they produce the distributional shift measured by $W_1$.
+Applying the same keyword lists to RecruitView Style B interview answers reveals the echo persists across registers: Neuroticism 27.5/1k (15$\times$ human), Extraversion 16.6/1k (7$\times$), Conscientiousness 10.2/1k (9$\times$), and Openness 9.8/1k (8$\times$); Agreeableness alone inverts (0.4 vs.\ 0.7/1k), likely because warmth in interview contexts manifests through tone rather than explicit warmth vocabulary. Despite these elevated rates, $W_1\approx 0$ on RecruitView: the echo mechanism is register-independent, but the probe is not.
+
+SHAP token attributions \citep{lundberg-lee-2017-shap} ($n=15$ per condition) confirm the probe is holistic: mean signed attributions lie in the $\pm 0.001$--$0.005$ range across ${\approx}450$ tokens with no single token decisive; each injected keyword contributes a small nudge and their combined effect drives $W_1$.
 
 \section{Discussion}
 
 \paragraph{Steering and register.} Steering is real on essays, with Openness most controllable and Conscientiousness least. Steering is entirely absent on RecruitView; the gap is one of register, not encoder. Additionally, per-trait probe Spearman on human transcripts reveals that Neuroticism is nearly non-recoverable from text ($\rho=0.08$), suggesting that interview-context anxiety is expressed primarily through non-verbal channels that transcription discards. The key methodological lesson: probe-based evaluation only generalises within its training register, and some traits may be fundamentally non-textual in certain domains.
 
-\paragraph{Mechanism.} LIWC and keyword statistics agree: GPT achieves steering by injecting trait-specific vocabulary that humans use far less often, plus systematic pronoun and sentence-length shifts. Crucially, these keywords are not in the prompt; GPT injects them from its own learned associations, making the apparent steering shallower than $W_1$ numbers suggest and detectable by a simple keyword frequency check.
+\paragraph{Mechanism.} LIWC and keyword statistics agree: GPT achieves steering by injecting trait-specific vocabulary that humans use far less often, plus systematic pronoun and sentence-length shifts. Crucially, these keywords are not in the prompt; GPT injects them from its own learned associations, making the apparent steering shallower than $W_1$ numbers suggest and detectable by a simple keyword frequency check on either register.
 
 \paragraph{Limitations.} We use a single training seed (42); single-seed accuracy can swing by a few percent, and the RoBERTa-vs-ModernBERT comparison would need multiple seeds before being treated as a model ranking. All numbers rely on a single LLM (GPT-4o-mini), prompt style, and temperature; other models or prompting strategies may yield different patterns. We use only the textual transcript from RecruitView, discarding video, audio, and prosody; our per-trait Spearman results suggest that Neuroticism in interview contexts is the trait most reliant on non-verbal signals ($\rho=0.08$ from text alone), while investigating which features of transcribed speech carry non-verbal personality markers remains future work. We additionally trained ModernBERT at 1\,500 tokens: macro AUC improved modestly (0.620 to 0.634) with the per-trait ranking unchanged.
 
@@ -204,7 +206,7 @@ SHAP (SHapley Additive exPlanations \citep{lundberg-lee-2017-shap}; per-token at
 
 \section{Conclusion}
 
-We measured Big Five steering in GPT-4o-mini using two probes trained on two structurally different datasets. Trait steering is detectable in long-form free writing (Openness most steerable; $W_1=0.30$) and undetectable in short interview answers ($W_1<0.07$) due to register mismatch. Linguistic analysis reveals that most of the apparent essay-side steering is lexical echo: GPT names trait constructs directly at 3 to 10 times the human rate, even without keyword prompting. For future probe-based LLM evaluation, we recommend reporting $W_1$ alongside a lexical-echo measure and verifying register match before interpreting alignment numbers.
+We measured Big Five steering in GPT-4o-mini using two probes trained on two structurally different datasets. Trait steering is detectable in long-form free writing (Openness most steerable; $W_1=0.30$) and undetectable in short interview answers ($W_1<0.07$) due to register mismatch. Linguistic analysis reveals that most of the apparent essay-side steering is lexical echo: GPT names trait constructs directly at 3 to 15 times the human rate across both registers, even without keyword prompting. For future probe-based LLM evaluation, we recommend reporting $W_1$ alongside a lexical-echo measure and verifying register match before interpreting alignment numbers.
 
 \section*{Acknowledgements}
 

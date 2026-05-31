@@ -249,14 +249,15 @@ def run_liwc_comparison(
 
 def run_tfidf_comparison(
     style_b_records: list[dict], human_texts: list[str], out_dir: Path,
-    top_k: int = 20,
+    top_k: int = 20, dataset: str = "essays",
 ) -> None:
     print("\n=== TF-IDF vocabulary comparison ===")
 
+    trait_cols = _trait_cols(dataset)
     df_d = pd.DataFrame(style_b_records)
     rows: list[dict] = []
 
-    for trait in config.TRAIT_COLS:
+    for trait in trait_cols:
         sub = df_d[df_d["prompted_trait"] == trait]
         high_texts = sub.loc[sub["prompted_level"] == "HIGH", "generated_text"].tolist()
         low_texts = sub.loc[sub["prompted_level"] == "LOW", "generated_text"].tolist()
@@ -310,11 +311,11 @@ def run_tfidf_comparison(
     print(f"  Saved tfidf_per_trait.csv  ({len(df_out)} rows, {n_traits} traits)")
 
     print("\n  Top-5 tokens per condition (HIGH vs LOW sample), by trait:")
-    for trait in config.TRAIT_COLS:
+    for trait in trait_cols:
         sub = df_out[df_out["trait"] == trait]
         if sub.empty:
             continue
-        print(f"\n    {trait} ({config.TRAIT_NAMES[trait]}):")
+        print(f"\n    {trait} ({_trait_display(dataset, trait)}):")
         for cond in ("humans", "high", "low"):
             tokens = sub[sub["condition"] == cond].head(5)["token"].tolist()
             print(f"      {cond:<8}: {', '.join(tokens) if tokens else '—'}")
@@ -335,17 +336,30 @@ def _keyword_rate(text: str, pattern: re.Pattern) -> float:
     return 1000.0 * len(pattern.findall(text)) / n_tokens
 
 
+# Maps RecruitView full-lowercase trait names to TRAIT_KEYWORDS keys (essays-style).
+_RV_KW_KEY: dict[str, str] = {
+    "openness":          "cOPN",
+    "conscientiousness": "cCON",
+    "extraversion":      "cEXT",
+    "agreeableness":     "cAGR",
+    "neuroticism":       "cNEU",
+}
+
+
 def run_keyword_frequency(
     style_b_records: list[dict], human_texts: list[str], out_dir: Path,
+    dataset: str = "essays",
 ) -> None:
     print("\n=== Keyword frequency analysis ===")
 
+    trait_cols = _trait_cols(dataset)
     df_d = pd.DataFrame(style_b_records)
     freq_rows: list[dict] = []
     stats_rows: list[dict] = []
 
-    for trait in config.TRAIT_COLS:
-        kw = config.TRAIT_KEYWORDS[trait]
+    for trait in trait_cols:
+        kw_key = _RV_KW_KEY.get(trait, trait) if dataset == "recruitview" else trait
+        kw = config.TRAIT_KEYWORDS[kw_key]
         pat_high = _compile_kw_pattern(kw["high"])
         pat_low  = _compile_kw_pattern(kw["low"])
 
@@ -422,7 +436,7 @@ def run_keyword_frequency(
     )
 
     print("\n  Mean HIGH-keyword rate per 1k tokens (humans / HIGH / LOW):")
-    for trait in config.TRAIT_COLS:
+    for trait in trait_cols:
         sub = df_freq[(df_freq["trait"] == trait) & (df_freq["pole"] == "high")]
         if sub.empty:
             continue
@@ -1158,10 +1172,10 @@ def main() -> None:
         )
 
     if not args.skip_tfidf:
-        run_tfidf_comparison(style_b_records, human_texts, out_dir)
+        run_tfidf_comparison(style_b_records, human_texts, out_dir, dataset=args.dataset)
 
     if not args.skip_keyword_freq:
-        run_keyword_frequency(style_b_records, human_texts, out_dir)
+        run_keyword_frequency(style_b_records, human_texts, out_dir, dataset=args.dataset)
 
     if not args.skip_errors:
         a_pred_path = (
