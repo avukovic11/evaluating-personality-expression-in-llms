@@ -1,0 +1,216 @@
+% TAR 2025/26 system description paper
+% TakeLab, FER
+
+\documentclass[10pt, a4paper]{article}
+
+\usepackage{tar2023}
+
+\usepackage[utf8]{inputenc}
+\usepackage[pdftex]{graphicx}
+\graphicspath{{paper_pictures/}{../datasets/results/llm-alignment/style_b/roberta-base/}}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+%\title{Evaluating Personality Expression in an Instruction-Tuned LLM: A Human-Model Comparison}
+\title{Personality in Name Only: Lexical Echo in LLM Big Five Steering}
+
+\name{Anonymous submission}
+
+\address{
+University of Zagreb, Faculty of Electrical Engineering and Computing \\
+Unska 3, 10000 Zagreb, Croatia\\
+}
+
+\abstract{
+Persona-aware chatbots and agents rely on language models writing in a requested personality, but how well they do this is unclear. We test whether GPT-4o-mini reflects predefined Big Five profiles using fine-tuned RoBERTa and ModernBERT probes trained on two structurally different corpora: Pennebaker stream-of-consciousness essays (written text, binary OCEAN labels) and RecruitView interview transcripts (transcribed speech, continuous z-scores). We generate 7\,117 essays and interview answers under single-trait and full-profile prompts with label-only steering and score them with both probes. Wasserstein-1 separation of \textsc{high} versus \textsc{low} predicted distributions reaches 0.30 for Openness on essays but stays under 0.07 on interview answers. Even though the prompts name only the trait label, GPT uses trait-specific vocabulary at 3 to 10 times the human rate, indicating that most of the measurable steering is GPT producing its own learned trait keywords rather than expressing the construct through implicit style. We treat the cross-register gap as evidence that probe-based LLM evaluation only generalises within its training register.
+}
+
+\begin{document}
+
+\maketitleabstract
+
+\section{Introduction}
+
+Large language models are routinely deployed as chatbots and synthetic content generators that target a specific persona. Whether the resulting text actually carries the requested personality, as opposed to a thin lexical disguise, is hard to verify directly. The dominant approach is indirect: train a classifier on human text annotated with personality labels \citep{yang-etal-2023-psycot,kerz-etal-2022-pushing} (a well-established detection paradigm \citep{v-ganesan-etal-2023-systematic}), then use that classifier as a \emph{probe} to score generated text. This approach assumes the probe transfers cleanly between the human writing it was trained on and the model output it scores, an assumption that is rarely tested.
+
+We address two open questions empirically about personality steering (the practice of prompting an LLM to write in a requested Big Five profile) using two probes and two corpora with maximally different registers and label types. First, is apparent steering genuine stylistic personality expression, or does GPT achieve it through lexical echo: injecting trait-associated vocabulary it has learned to associate with a construct label? Second, does probe-based evaluation generalise between text registers (long-form free writing versus short interview answers)?
+
+Our central finding is that GPT achieves measured steering primarily through \emph{lexical echo}: it injects trait-associated vocabulary at 3 to 10 times the human rate, even when prompts name only the label. On essays this yields a Wasserstein-1 separation up to 0.30 for Openness; the same probe fails completely on interview answers ($W_1$ below 0.07), revealing that probe-based evaluation does not transfer across registers.
+
+\section{Related Work}
+
+Personality classification from text is a long-standing task with the Pennebaker \& King essays as a standard benchmark \citep{pennebaker-king-1999,mehta-etal-2020-bottom}. \citet{kerz-etal-2022-pushing} push the state of the art on this dataset to 63.5\,\% mean accuracy using psycholinguistic feature contours combined with a transformer. Recent work casts detection as chain-of-thought over a questionnaire \citep{yang-etal-2023-psycot} or introduces psychological attention \citep{zhang-etal-2023-psyattention}.
+
+LLM personality production is a younger but growing area. \citet{v-ganesan-etal-2023-systematic} systematically evaluate GPT-3 as a personality annotator, but do not test whether LLM-generated text matches a requested profile. Complementary work prompts LLMs to adopt a Big Five persona and scores the output with validated psychometric inventories or with short-text probes; such studies share two blind spots: they operate within a single text register and never verify whether the probe's signal is driven by genuine stylistic expression or by lexical contamination. We run the same evaluation pipeline on two corpora with maximally different registers and add an explicit lexical-echo audit.
+
+\section{Method}
+
+\subsection{Datasets}
+
+The Pennebaker \& King Essays corpus contains 2\,467 stream-of-consciousness essays labelled binary (\texttt{y}/\texttt{n}) on each Big Five trait \citep{goldberg-1990-bigfive}. Mean length is 652 words. We use a multi-label stratified 80/10/10 split (1\,973/246/248).
+
+The RecruitView corpus \citep{gupta-etal-2025-recruitview} contains 2\,011 video clips from 331 participants answering interview questions. We use only the Whisper-transcribed \citep{radford-etal-2022-whisper} text and the continuous z-scored OCEAN scores, treating this as a purely textual study; whether non-verbal cues (facial expression, gesture, prosody) visible in video contribute to the human personality labels, and hence whether GPT-generated text can replicate that signal, remains an open question. Labels are user-level, so we split by user, 70/15/15, giving 1\,422 training clips. We strip Whisper timestamps and drop clips under five words; disfluencies and restarts are kept deliberately, since they are part of the spoken register.
+
+\subsection{Probes}
+
+We fine-tune RoBERTa-base \citep{liu-etal-2019-roberta} (primary) and ModernBERT-base \citep{warner-etal-2024-modernbert} (secondary) with a five-output linear head. Essays use sigmoid logits (binary cross-entropy) with per-trait threshold tuning on validation; RecruitView uses MSE regression. Training: AdamW, $\text{lr}=2\!\times\!10^{-5}$, batch 16, max 512 tokens, weight decay 0.01, 10\% warmup, up to 8 epochs with early stopping, single seed~42. Hyperparameters follow established encoder fine-tuning practice. Both probes truncate to 512 subword tokens; given mean essay length 652 words ($\approx$900 tokens), roughly 30\% is unseen; we revisit this in the limitations. We additionally report majority/mean, TF-IDF, and 21 LIWC-style feature \citep{mohammad-turney-2013-emolex} baselines. Implementation: HuggingFace Transformers \citep{wolf-etal-2020-transformers} and scikit-learn \citep{pedregosa-etal-2011-sklearn}.
+
+\subsection{LLM Generation}
+
+We generate with GPT-4o-mini \citep{openai-2024-gpt4o} at temperature 0.9 in two regimes. Style B (single-trait): 125 \textsc{high} + 125 \textsc{low} prompts per trait, plus a 250-essay \textsc{neutral} pool shared across traits (the pool is twice as large as each directed condition; this does not affect the primary $W_1(\textsc{high},\textsc{low})$ comparisons). Style A (full-profile): samples a real human's complete five-trait profile; on RecruitView we sample 228 train users and generate one answer per their actual interview questions (mean 6.1 answers per user; 1\,395 total). All prompts use the trait label alone (``as someone who is highly extraverted'') without descriptor word lists, a deliberate choice that strengthens the lexical-echo analysis. Total: 1\,522+500 on essays; 3\,700+1\,395 on RecruitView.
+
+\subsection{Evaluation}
+
+For Style B we compute the Wasserstein-1 distance ($W_1$; the minimum cost to transport one probability distribution onto another, larger values indicate greater separation) between \textsc{high} and \textsc{low} predicted distributions per trait, with 95\% bootstrap CIs from 1\,000 resamples \citep{virtanen-etal-2020-scipy}, and a $5\!\times\!5$ cross-trait contamination matrix. For Style A on essays we report per-trait AUC and accuracy; on RecruitView, per-essay and per-user Spearman $\rho$. For linguistic analysis: LIWC-style features with Mann-Whitney $p$-values and Cliff's $\delta$ \citep{cliffs-delta-1993} (a non-parametric effect size ranging from $-1$ to $+1$), TF-IDF discriminating tokens, trait-specific keyword rates per 1\,000 tokens, and SHAP token attributions \citep{lundberg-lee-2017-shap} on a held-out sample.
+
+\section{Results}
+
+\subsection{Probe Performance}
+
+\begin{table}[t]
+\caption{Probe performance on essays (per-trait acc / AUC) and RecruitView $\rho$ (clip / user-aggregated).}
+\label{tab:probes}
+\begin{center}
+\small
+\begin{tabular}{lcccc}
+\toprule
+& \multicolumn{2}{c}{RoBERTa} & \multicolumn{2}{c}{ModernBERT} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+Trait & acc & AUC & acc & AUC \\
+\midrule
+cEXT & 0.54 & 0.60 & 0.55 & 0.60 \\
+cNEU & 0.65 & 0.66 & 0.60 & 0.64 \\
+cAGR & 0.55 & 0.62 & 0.56 & 0.59 \\
+cCON & 0.50 & 0.56 & 0.52 & 0.57 \\
+cOPN & 0.68 & \textbf{0.72} & 0.62 & 0.71 \\
+\midrule
+macro      & \textbf{0.58} & \textbf{0.63} & 0.57 & 0.62 \\
+TF-IDF / LIWC & 0.60 / 0.57 & --- & --- & --- \\
+\midrule
+\multicolumn{5}{l}{\small RV $\rho$: R 0.27/\textbf{0.47}; M \textbf{0.30}/0.47 (clip/user)} \\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{table}
+
+Table~\ref{tab:probes} reports probe and baseline performance. RoBERTa macro-accuracy of 0.584 sits below the 63.5\% reported by \citet{kerz-etal-2022-pushing}, as expected for a single-seed model without an ensemble. Openness is the easiest trait (RoBERTa AUC 0.716); Conscientiousness the hardest (0.564). User-level aggregation on RecruitView roughly doubles macro Spearman (0.27 to 0.47). We treat RoBERTa as the primary probe.
+
+\subsection{Style B on Essays: Steering Works}
+
+\begin{table}[t]
+\caption{Style B $W_1$ (essays, RoBERTa). 95\% bootstrap CI in brackets. Means show steering direction.}
+\label{tab:styleb-essays}
+\begin{center}
+\small
+\begin{tabular}{lcccc}
+\toprule
+Trait & $W_1$ [CI] & H & L & N \\
+\midrule
+cOPN & \textbf{0.30} [0.28,0.33] & .85 & .55 & .61 \\
+cAGR & 0.20 [0.18,0.21]          & .68 & .48 & .64 \\
+cNEU & 0.20 [0.18,0.21]          & .68 & .48 & .56 \\
+cEXT & 0.11 [0.10,0.13]          & .66 & .55 & .59 \\
+cCON & 0.11 [0.10,0.12]          & .72 & .61 & .65 \\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{table}
+
+\begin{figure}[t]
+\begin{center}
+\includegraphics[width=\columnwidth]{density_cOPN.png}
+\caption{Predicted Openness on essays. \textsc{High} and \textsc{low} distributions separate cleanly; \textsc{neutral} sits near the human baseline. Strongest steering signal in the paper ($W_1=0.30$).}
+\label{fig:density-opn}
+\end{center}
+\end{figure}
+
+Trait steering is detectable across all five traits (Table~\ref{tab:styleb-essays}, Figure~\ref{fig:density-opn}). Openness is most steerable ($W_1=0.30$), Conscientiousness and Extraversion the least ($W_1\approx 0.11$). ModernBERT gives the same ordering except for cNEU and cAGR where separations are larger (0.43 and 0.38).
+
+Figure~\ref{fig:contam} reports the contamination matrix. Notable cross-trait leakage: \textsc{high}-Neuroticism suppresses Openness by 0.19; \textsc{high}-Extraversion suppresses Neuroticism by 0.19. The pattern matches known Big Five covariance and limits independent-trait control.
+
+\begin{figure}[t]
+\begin{center}
+\includegraphics[width=\columnwidth]{contamination.png}
+\caption{Cross-trait contamination (RoBERTa, essays). Diagonal = $W_1$ from Table~\ref{tab:styleb-essays}. Off-diagonal cells show trait leakage: \textsc{high}-NEU lowers OPN by 0.19.}
+\label{fig:contam}
+\end{center}
+\end{figure}
+
+In Style A (full five-trait profiles, $n=500$), the probe distinguishes intended-\textsc{high} from intended-\textsc{low} essays at every trait with macro AUC 0.819, well above the probe's own ceiling on humans (0.630). This inflated AUC is consistent with the lexical-echo analysis below (Section~\ref{sec:analysis}).
+
+\subsection{RecruitView: Steering Collapses}
+
+\begin{table}[t]
+\caption{Style B $W_1$ on RecruitView (RoBERTa, z-scored, 95\% CIs). All entries near zero; GPT predictions cluster below $z=0$ regardless of condition.}
+\label{tab:styleb-rv}
+\begin{center}
+\small
+\begin{tabular}{lccc}
+\toprule
+Trait & $W_1$ [CI] & H mean & L mean \\
+\midrule
+openness          & 0.07 [0.05, 0.09] & $-0.52$ & $-0.45$ \\
+conscientiousness & 0.06 [0.05, 0.07] & $-0.46$ & $-0.40$ \\
+extraversion      & 0.03 [0.02, 0.04] & $-0.51$ & $-0.54$ \\
+agreeableness     & 0.05 [0.03, 0.06] & $-0.39$ & $-0.34$ \\
+neuroticism       & 0.01 [0.01, 0.01] & $+0.16$ & $+0.17$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{table}
+
+Table~\ref{tab:styleb-rv} reports Style B on RecruitView. All five $W_1$ values lie between 0.01 and 0.07, three to ten times smaller than on essays, and every predicted distribution sits at $z\approx -0.5$, far from the human baseline at $z=0$. Style A confirms the same pattern: per-essay Spearman $-0.22$ and per-user Spearman $-0.48$, negative on both probes. We read this as a domain-transfer failure: the probe was trained on transcribed spontaneous speech with disfluencies and restarts; GPT produces clean written prose instead. Crucially, the correlation is \emph{negative} rather than near-zero: GPT's ``high-trait'' prose is more distant from the probe's training distribution than its ``low-trait'' prose, systematically inverting the intended ranking.
+
+Per-trait Spearman on \emph{human} RecruitView text additionally reveals which traits survive transcription at all. Openness ($\rho=0.38$), Agreeableness ($\rho=0.33$), Conscientiousness ($\rho=0.30$), and Extraversion ($\rho=0.26$) show moderate textual recoverability, while Neuroticism is barely predictable ($\rho=0.08$). The near-zero neuroticism signal is consistent with interview anxiety manifesting primarily through non-verbal channels (visible nervousness, voice tremor, postural cues) that Whisper transcription discards.
+
+\section{Linguistic Analysis}
+\label{sec:analysis}
+
+\begin{table}[t]
+\caption{Lexical echo, essays: trait keyword rate per 1\,000 tokens. GPT \textsc{high} uses trait-specific words 3--10$\times$ more than humans. Keywords were \emph{not} present in the prompts.}
+\label{tab:echo}
+\begin{center}
+\small
+\begin{tabular}{lccc}
+\toprule
+Trait & humans & GPT \textsc{high} & GPT \textsc{low} \\
+\midrule
+cEXT & 4.94 & \textbf{19.89} & 14.04 \\
+cNEU & 1.75 &  5.74          &  2.74 \\
+cAGR & 1.33 &  4.00          &  1.23 \\
+cCON & 0.40 &  3.52          &  1.93 \\
+cOPN & 0.30 &  2.18          &  0.66 \\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{table}
+
+LIWC-style features show that GPT steers each trait through distinct surface cues: high Extraversion uses \emph{we} over \emph{I} ($\delta=+0.90/-0.89$); high Neuroticism uses shorter words and lower lexical diversity ($\delta=-0.97/-0.89$); high Agreeableness uses \emph{I} and avoids negation ($\delta=+0.94/-0.78$); high Openness uses longer words and more questions; high Conscientiousness uses longer words. Emotion categories \citep{mohammad-turney-2013-emolex} were uninformative ($\delta=0$), suggesting the stream-of-consciousness register suppresses explicit emotion words.
+
+Table~\ref{tab:echo} quantifies lexical echo. We built a small keyword list per trait pole (e.g., ``anxious'', ``worried'', ``stressed'' for high Neuroticism) and measured usage rates. Critically, \emph{none} of these keywords appear in our prompts, which contain only the construct label. The echo therefore cannot arise from copying prompt words; it reflects the model's own pretrained association between a label (``extraverted'') and a trait-specific vocabulary. GPT \textsc{high} essays use these words at 3 to 10 times the human rate on every trait.
+
+SHAP (SHapley Additive exPlanations \citep{lundberg-lee-2017-shap}; per-token attribution values from a cooperative game-theoretic decomposition of the model output) on a held-out sample ($n=15$ per condition) confirms that the probe is holistic: mean signed attributions lie in the $\pm 0.001$--$0.005$ range across ${\approx}450$ tokens, with no single token decisive. The keyword flood therefore works through accumulated distributed contributions: each injected trait word nudges the score slightly, and together they produce the distributional shift measured by $W_1$.
+
+\section{Discussion}
+
+\paragraph{Steering and register.} Steering is real on essays, with Openness most controllable and Conscientiousness least. Steering is entirely absent on RecruitView; the gap is one of register, not encoder. Additionally, per-trait probe Spearman on human transcripts reveals that Neuroticism is nearly non-recoverable from text ($\rho=0.08$), suggesting that interview-context anxiety is expressed primarily through non-verbal channels that transcription discards. The key methodological lesson: probe-based evaluation only generalises within its training register, and some traits may be fundamentally non-textual in certain domains.
+
+\paragraph{Mechanism.} LIWC and keyword statistics agree: GPT achieves steering by injecting trait-specific vocabulary that humans use far less often, plus systematic pronoun and sentence-length shifts. Crucially, these keywords are not in the prompt; GPT injects them from its own learned associations, making the apparent steering shallower than $W_1$ numbers suggest and detectable by a simple keyword frequency check.
+
+\paragraph{Limitations.} We use a single training seed (42); single-seed accuracy can swing by a few percent, and the RoBERTa-vs-ModernBERT comparison would need multiple seeds before being treated as a model ranking. All numbers rely on a single LLM (GPT-4o-mini), prompt style, and temperature; other models or prompting strategies may yield different patterns. We use only the textual transcript from RecruitView, discarding video, audio, and prosody; our per-trait Spearman results suggest that Neuroticism in interview contexts is the trait most reliant on non-verbal signals ($\rho=0.08$ from text alone), while investigating which features of transcribed speech carry non-verbal personality markers remains future work. We additionally trained ModernBERT at 1\,500 tokens: macro AUC improved modestly (0.620 to 0.634) with the per-trait ranking unchanged.
+
+\paragraph{Ethics.} Personality-steered generation carries real misuse risk, most acutely in automated hiring, the setting of our RecruitView corpus \citep{gupta-etal-2025-recruitview}. A model prompted to appear highly conscientious could inflate candidate profiles or seed biased training data. Our central finding is a partial safeguard: current steering is surface-level lexical mimicry that a keyword-frequency audit can detect. Nonetheless, deploying probe-based personality classifiers in hiring without such audits is inadvisable.
+
+\section{Conclusion}
+
+We measured Big Five steering in GPT-4o-mini using two probes trained on two structurally different datasets. Trait steering is detectable in long-form free writing (Openness most steerable; $W_1=0.30$) and undetectable in short interview answers ($W_1<0.07$) due to register mismatch. Linguistic analysis reveals that most of the apparent essay-side steering is lexical echo: GPT names trait constructs directly at 3 to 10 times the human rate, even without keyword prompting. For future probe-based LLM evaluation, we recommend reporting $W_1$ alongside a lexical-echo measure and verifying register match before interpreting alignment numbers.
+
+\section*{Acknowledgements}
+
+We thank the TAR teaching staff for guidance and the authors of the Pennebaker and RecruitView datasets for making the resources available.
+
+\bibliographystyle{tar2023}
+\bibliography{tar2023}
+
+\end{document}

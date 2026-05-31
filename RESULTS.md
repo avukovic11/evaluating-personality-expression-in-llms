@@ -255,7 +255,37 @@ GPT **does** produce measurable surface-feature differences in interview answers
 
 ---
 
-## 6. Cross-Track Comparison and Paper Conclusions
+## 6. SHAP Token Attribution (Essays, n=15 per condition)
+
+Computed with `shap.maskers.Text` + RoBERTa probe. Two analyses run:
+- **Part 1** (LLM vs Humans): conditions = humans / GPT-HIGH / GPT-LOW per trait
+- **Part 2** (Humans only): conditions = human_high / human_low (ground-truth labels)
+
+### 6.1 Key finding: attribution is diffuse
+
+All mean_signed_shap values are in the ±0.001–0.005 range. With ~450 tokens per essay, the probe's total attribution signal is spread across hundreds of tokens — no single token is a strong driver. This confirms that the probe is holistic: it reads distributed stylistic patterns, not keyword presence. **This makes the LIWC and TF-IDF analyses the primary linguistic evidence; SHAP is supporting.**
+
+### 6.2 Most interpretable Part 1 tokens (LLM essays)
+
+| Trait | Condition | Top tokens | Interpretation |
+|---|---|---|---|
+| cCON | HIGH | wake, woke, already, exam | GPT's conscientious essays focus on morning routines and deadline awareness |
+| cCON | LOW | due, assignment, forgetting, assignments | LOW essays mention tasks but in a failing/worried register |
+| cNEU | humans | sucks (+0.002) | Strongest single token in the dataset; real neurotic essays use casual negative language |
+| cOPN | LOW | environment, connect, books (negative signed) | Conventional essays are thematically narrow, suppressing openness score |
+| cEXT | HIGH | excited, warm, campus | Social/energetic vocabulary in GPT-HIGH extraversion |
+
+### 6.3 Part 2 (Humans only) — noisier, less interpretable
+
+Human essays are far more variable than GPT essays. With n=15, the human_high and human_low SHAP rankings overlap heavily (e.g., both cAGR conditions surface "excited", "weekend", "fun"). This suggests that at the individual-token level, real personality differences are too diffuse to capture reliably with this sample size. The LIWC Cliff's δ analysis (§4.1) is more robust for human essays.
+
+### 6.4 Paper framing
+
+SHAP should be presented as: "attribution is distributed across the full document rather than concentrated in a few trait-diagnostic tokens, consistent with the probe's holistic operation." Avoid over-interpreting specific token lists given the small magnitudes.
+
+---
+
+## 7. Cross-Track Comparison and Paper Conclusions
 
 ### 6.1 Main Findings
 
@@ -291,7 +321,7 @@ Style A AUC (LLM distinguishing intended HIGH from LOW) exceeds the probe's own 
 
 ---
 
-## 7. Output File Index
+## 8. Output File Index
 
 ### Essays track
 

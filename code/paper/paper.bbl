@@ -1,0 +1,154 @@
+\begin{thebibliography}{}
+
+\bibitem[\protect\citename{Cliff}1993]{cliffs-delta-1993}
+Norman Cliff.
+\newblock 1993.
+\newblock Dominance statistics: Ordinal analyses to answer ordinal questions.
+\newblock {\em Psychological Bulletin}, 114(3):494--509.
+
+\bibitem[\protect\citename{Ganesan \bgroup et al.\egroup
+  }2023]{v-ganesan-etal-2023-systematic}
+Adithya~V Ganesan, Yash~Kumar Lal, August Nilsson, and H.~Andrew Schwartz.
+\newblock 2023.
+\newblock Systematic evaluation of {GPT}-3 for zero-shot personality
+  estimation.
+\newblock In {\em Proceedings of the 13th Workshop on Computational Approaches
+  to Subjectivity, Sentiment, {\&} Social Media Analysis}, pages 390--400,
+  Toronto, Canada. Association for Computational Linguistics.
+
+\bibitem[\protect\citename{Goldberg}1990]{goldberg-1990-bigfive}
+Lewis~R. Goldberg.
+\newblock 1990.
+\newblock An alternative `description of personality': The {Big}-{Five} factor
+  structure.
+\newblock {\em Journal of Personality and Social Psychology}, 59(6):1216--1229.
+
+\bibitem[\protect\citename{Gupta and others}2025]{gupta-etal-2025-recruitview}
+Aniruddha Gupta et~al.
+\newblock 2025.
+\newblock {RecruitView}: A multimodal dataset for interview performance and
+  personality analysis.
+\newblock Hugging Face Datasets: AI4A-lab/RecruitView.
+
+\bibitem[\protect\citename{Kerz \bgroup et al.\egroup
+  }2022]{kerz-etal-2022-pushing}
+Elma Kerz, Yu~Qiao, Sourabh Zanwar, and Daniel Wiechmann.
+\newblock 2022.
+\newblock Pushing on personality detection from verbal behavior: A transformer
+  meets text contours of psycholinguistic features.
+\newblock In {\em Proceedings of the 12th Workshop on Computational Approaches
+  to Subjectivity, Sentiment {\&} Social Media Analysis}, pages 182--194,
+  Dublin, Ireland. Association for Computational Linguistics.
+
+\bibitem[\protect\citename{Liu \bgroup et al.\egroup
+  }2019]{liu-etal-2019-roberta}
+Yinhan Liu, Myle Ott, Naman Goyal, Jingfei Du, Mandar Joshi, Danqi Chen, Omer
+  Levy, Mike Lewis, Luke Zettlemoyer, and Veselin Stoyanov.
+\newblock 2019.
+\newblock {RoBERTa}: A robustly optimized {BERT} pretraining approach.
+\newblock arXiv:1907.11692.
+
+\bibitem[\protect\citename{Lundberg and Lee}2017]{lundberg-lee-2017-shap}
+Scott~M. Lundberg and Su-In Lee.
+\newblock 2017.
+\newblock A unified approach to interpreting model predictions.
+\newblock arXiv:1705.07874.
+
+\bibitem[\protect\citename{Mehta \bgroup et al.\egroup
+  }2020]{mehta-etal-2020-bottom}
+Yash Mehta, Samin Fatehi, Amirmohammad Kazameini, Clemens Stachl, Erik Cambria,
+  and Sauleh Eetemadi.
+\newblock 2020.
+\newblock Bottom-up and top-down: Predicting personality with psycholinguistic
+  and language model features.
+\newblock In {\em Proceedings of the 20th IEEE International Conference on Data
+  Mining (ICDM)}, pages 1184--1189.
+
+\bibitem[\protect\citename{Mohammad and
+  Turney}2013]{mohammad-turney-2013-emolex}
+Saif~M. Mohammad and Peter~D. Turney.
+\newblock 2013.
+\newblock Crowdsourcing a word-emotion association lexicon.
+\newblock {\em Computational Intelligence}, 29(3):436--465.
+
+\bibitem[\protect\citename{{OpenAI}}2024]{openai-2024-gpt4o}
+{OpenAI}.
+\newblock 2024.
+\newblock {GPT-4o} system card.
+\newblock Technical report.
+
+\bibitem[\protect\citename{Pedregosa \bgroup et al.\egroup
+  }2011]{pedregosa-etal-2011-sklearn}
+F.~Pedregosa, G.~Varoquaux, A.~Gramfort, V.~Michel, B.~Thirion, O.~Grisel,
+  M.~Blondel, P.~Prettenhofer, R.~Weiss, V.~Dubourg, J.~Vanderplas, A.~Passos,
+  D.~Cournapeau, M.~Brucher, M.~Perrot, and E.~Duchesnay.
+\newblock 2011.
+\newblock Scikit-learn: Machine learning in {P}ython.
+\newblock {\em Journal of Machine Learning Research}, 12:2825--2830.
+
+\bibitem[\protect\citename{Pennebaker and King}1999]{pennebaker-king-1999}
+James~W. Pennebaker and Laura~A. King.
+\newblock 1999.
+\newblock Linguistic styles: Language use as an individual difference.
+\newblock {\em Journal of Personality and Social Psychology}, 77(6):1296--1312.
+
+\bibitem[\protect\citename{Radford \bgroup et al.\egroup
+  }2022]{radford-etal-2022-whisper}
+Alec Radford, Jong~Wook Kim, Tao Xu, Greg Brockman, Christine McLeavey, and
+  Ilya Sutskever.
+\newblock 2022.
+\newblock Robust speech recognition via large-scale weak supervision.
+\newblock arXiv:2212.04356.
+
+\bibitem[\protect\citename{Virtanen and others}2020]{virtanen-etal-2020-scipy}
+Pauli Virtanen et~al.
+\newblock 2020.
+\newblock {SciPy} 1.0: Fundamental algorithms for scientific computing in
+  {P}ython.
+\newblock {\em Nature Methods}, 17:261--272.
+
+\bibitem[\protect\citename{Warner \bgroup et al.\egroup
+  }2024]{warner-etal-2024-modernbert}
+Benjamin Warner, Antoine Chaffin, Benjamin Clavi{\'e}, Orion Weller, Oskar
+  Hallstr{\"o}m, Said Taghadouini, Alexis Gallagher, Raja Biswas, Faisal
+  Ladhak, Tom Aarsen, Nathan Cooper, Griffin Adams, Jeremy Howard, and Iacopo
+  Poli.
+\newblock 2024.
+\newblock {ModernBERT}: A modern bidirectional encoder for the modern era.
+\newblock arXiv:2412.13663.
+
+\bibitem[\protect\citename{Wolf \bgroup et al.\egroup
+  }2020]{wolf-etal-2020-transformers}
+Thomas Wolf, Lysandre Debut, Victor Sanh, Julien Chaumond, Clement Delangue,
+  Anthony Moi, Pierric Cistac, Tim Rault, R{\'e}mi Louf, Morgan Funtowicz, Joe
+  Davison, Sam Shleifer, Patrick von Platen, Clara Ma, Yacine Jernite, Julien
+  Plu, Canwen Xu, Teven~Le Scao, Sylvain Gugger, Mariama Drame, Quentin Lhoest,
+  and Alexander~M. Rush.
+\newblock 2020.
+\newblock Transformers: State-of-the-art natural language processing.
+\newblock In {\em Proceedings of the 2020 Conference on Empirical Methods in
+  Natural Language Processing: System Demonstrations}, pages 38--45.
+  Association for Computational Linguistics.
+
+\bibitem[\protect\citename{Yang \bgroup et al.\egroup
+  }2023]{yang-etal-2023-psycot}
+Tao Yang, Tianyuan Shi, Fanqi Wan, Xiaojun Quan, Qifan Wang, Bingzhe Wu, and
+  Jiaxiang Wu.
+\newblock 2023.
+\newblock {P}sy{C}o{T}: Psychological questionnaire as powerful
+  chain-of-thought for personality detection.
+\newblock In {\em Findings of the Association for Computational Linguistics:
+  EMNLP 2023}, pages 3305--3320, Singapore. Association for Computational
+  Linguistics.
+
+\bibitem[\protect\citename{Zhang \bgroup et al.\egroup
+  }2023]{zhang-etal-2023-psyattention}
+Baohua Zhang, Yongyi Huang, Wenyao Cui, Zhang Huaping, and Jianyun Shang.
+\newblock 2023.
+\newblock {P}sy{A}ttention: Psychological attention model for personality
+  detection.
+\newblock In {\em Findings of the Association for Computational Linguistics:
+  EMNLP 2023}, pages 3398--3411, Singapore. Association for Computational
+  Linguistics.
+
+\end{thebibliography}
